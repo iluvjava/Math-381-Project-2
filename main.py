@@ -1,9 +1,14 @@
 
+"""
+Group 4, this is for the Project 2.
 
+
+"""
 import numpy as np
 from string import ascii_letters
 
 ENCODING = "utf8"
+
 
 class TransitionMatrix:
 
@@ -33,6 +38,23 @@ class TransitionMatrix:
             assert s > 0, "The given text is not long enough to contain all all characters. "
             if s > 0:
                 self.matrix[i] /= s
+
+
+"""
+Files for an author and transitional matrix for the author. 
+"""
+class Author:
+
+    def __init__(self, filepath:str):
+        self.M = TransitionMatrix(filepath)
+        w, v = np.linalg.eig(self.M.transpose)
+        self.__EigVec = v
+
+
+    def compare_matrix(self):
+        pass
+
+
 
 def main():
     try:
