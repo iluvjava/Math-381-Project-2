@@ -12,7 +12,7 @@ class TransitionMatrix:
             creates a transitional matrix for the given text.
             This is the ordering the states:
 
-            'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ '<None>'
+            abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ '<None>
         :param filename:
             The file path
         """
@@ -34,8 +34,7 @@ class TransitionMatrix:
             if s > 0:
                 self.matrix[i] /= s
 
-# test code
-if __name__ == '__main__':
+def main():
     try:
         t = TransitionMatrix('allNone_case.txt')
     except:
@@ -44,8 +43,13 @@ if __name__ == '__main__':
     t = TransitionMatrix('tester.txt')
     matrix = t.matrix
     print("Matrix shape =", matrix.shape)
-    print(matrix)
+    print([[round(matrix[I, J], 5) for I in range(55)] for J in range(55)])
     print("Matrix row sums =", np.sum(matrix, axis=1).ravel()) # not guarantee add up to 1 all the time
+
+
+# test code
+if __name__ == '__main__':
+    main()
 
 
 
