@@ -161,7 +161,6 @@ def main():
         t = TransitionMatrix('allNone_case.txt')
     except:
         print("Error is Expected.")
-
     t = TransitionMatrix('tester.txt')
     matrix = t.matrix
     print("Matrix shape =", matrix.shape)
