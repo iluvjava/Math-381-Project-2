@@ -6,55 +6,147 @@ Group 4, this is for the Project 2.
 """
 import numpy as np
 from string import ascii_letters
+from typing import List
+
+from os import listdir
+from os.path import isfile
 
 ENCODING = "utf8"
 
+# A list of authors' directory:
+CHARLES_DICKENS = "data/Charles Dickens"
+
+def file_readlines(filepath:str):
+    """
+    Function reads lines from the file, with the new line character stripped off from
+    the line
+
+    :param filename:
+        The file path.
+    :return:
+    A array of string. Each string is a line in the file.
+    """
+    with open(filepath, 'r', encoding=ENCODING) as f:
+        return [l.strip() for l in f.readlines()]
 
 class TransitionMatrix:
+    characters = ascii_letters + " '"
 
-    def __init__(self, filename):
+    def __init__(self, lines:List[List[str]]=None):
         """
             creates a transitional matrix for the given text.
             This is the ordering the states:
-
             abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ '<None>
         :param filename:
             The file path
+        :param lines:
+            Provide strings is also ok, it will take an array of lines to construct the matrix.
         """
         self.matrix = np.zeros((55, 55))
-        characters = ascii_letters + " '"
 
-        with open(filename, 'r', encoding=ENCODING) as f:
-            for line in f.readlines():
-                line = list(line.strip())
-                for i, c2 in enumerate(line[1:]):
-                    c1 = line[i]
-                    indx1 = characters.find(c1)
-                    indx2 = characters.find(c2)
-                    self.matrix[indx1, indx2] += 1
+
+        for line in lines:
+            line = list(line)
+            if len(line) == 0:
+                continue
+            for i, c2 in enumerate(line[1:]):
+                c1 = line[i]
+                indx1 = TransitionMatrix.characters.find(c1)
+                indx2 = TransitionMatrix.characters.find(c2)
+                self.matrix[indx1, indx2] += 1
 
         for i in range(self.matrix.shape[0]):
             s = np.sum(self.matrix[i])
-            assert s > 0, "The given text is not long enough to contain all all characters. "
             if s > 0:
                 self.matrix[i] /= s
+
+    def missing_states(self):
+        """
+            Sometimes not all the letters in the alphebet are used,
+            This method will return a list of characters that are not
+            used in the lines of text.
+
+        :return:
+            A list letters that didn't appear in the lines of text.
+        """
+        res = []
+        for I, RowSum in enumerate(self.matrix.sum(axis=1)):
+            if RowSum == 0.0:
+                res.append(TransitionMatrix.characters[I])
+        return res
+
+
+    def __repr__(self):
+        return str(self.matrix)
 
 
 """
 Files for an author and transitional matrix for the author. 
+* Transitional Matrix classified by each files in the folder
+* For each file, there will be several transitional matrices for parts of the files. 
 """
 class Author:
 
-    def __init__(self, filepath:str):
-        self.M = TransitionMatrix(filepath)
-        w, v = np.linalg.eig(self.M.transpose)
-        self.__EigVec = v
+    def __init__(self, dir:str):
+        FilePathList = []
+        for filename in listdir(dir):
+            filepath = dir + "/" + filename
+            if isfile(filepath):
+                FilePathList.append(filepath)
 
+        assert len(FilePathList) > 0, f"There is no file under the directory: {dir}"
 
-    def compare_matrix(self):
+        FilePath2Lines = {}
+        for f in FilePathList:
+            FilePath2Lines[f] = file_readlines(f)
+        self.__FilePathToLines = FilePath2Lines
+
+    def get_fp2lines(self):
+        return self.__FilePathToLines
+
+    def filepath_list(self):
+        return list(self.__FilePathToLines.keys())
+
+    def filelines_list(self):
+        return list(self.__FilePathToLines.values())
+
+    def matrix_eachfile(self, partition = 1):
+        """
+        :param partition:
+            For each file, the user has the option to partition the matrix.
+            For this case, there will be multiple transitional matrices for a single given file.
+        :return:
+            A list of the instances for the TransitionalMatrix, each corresponds to a file of the author.
+        """
+        if partition == 1:
+            return [TransitionMatrix(lines) for lines in self.filelines_list()]
         pass
 
+    def matrix_allfiles(self):
+        """
+            combine all the lines in the file into one single work.
+            Then create the transitional matrix for this authors, treating all his works as one big line of text.
+        """
+        alllines = []
+        for writing in self.filelines_list():
+            alllines += writing
+        return TransitionMatrix(alllines)
 
+    
+
+
+def test_authors():
+    instance = Author(CHARLES_DICKENS)
+    print(len(instance.get_fp2lines()))
+    print(instance.get_fp2lines().keys())
+    print(instance.matrix_eachfile())
+    print("-----Here is a list of numpy matrix from author: ")
+    for M in instance.matrix_eachfile():
+        print(M)
+        print(f"The missing states for the transitional matrix:{M.missing_states()}")
+
+    print("-------Here is the transitional matrix for all lines of works from the author:")
+    print(instance.matrix_allfiles())
 
 def main():
     try:
@@ -71,7 +163,8 @@ def main():
 
 # test code
 if __name__ == '__main__':
-    main()
+    # main()
+    test_authors()
 
 
 
