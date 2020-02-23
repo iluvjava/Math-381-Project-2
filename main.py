@@ -15,6 +15,8 @@ ENCODING = "utf8"
 
 # A list of authors' directory:
 CHARLES_DICKENS = "data/Charles Dickens"
+MARK_TWAIN = "data/Mark Twain"
+
 
 def file_readlines(filepath:str):
     """
@@ -63,10 +65,9 @@ class TransitionMatrix:
 
     def missing_states(self):
         """
-            Sometimes not all the letters in the alphebet are used,
+            Sometimes not all the letters in the alphabet are used,
             This method will return a list of characters that are not
             used in the lines of text.
-
         :return:
             A list letters that didn't appear in the lines of text.
         """
@@ -79,6 +80,25 @@ class TransitionMatrix:
 
     def __repr__(self):
         return str(self.matrix)
+
+
+def distance_between(MatrixA, MatrixB, norm=2):
+    """
+        This function takes in 2 instances of the class TransitionalMatrix
+        and returns the distance between these 2 matrices.
+        * The function takes the norm of the matrix (A - B)
+    :param MatrixA:
+        Matrix A.
+    :param MatrixB:
+        Matrix B.
+    :param norm:
+        There is the choice of choosing what kind of norm to measure the
+        distance between these 2 matrices.
+    :return:
+        A float representing the distance between these 2 matrices.
+    """
+    pass
+
 
 
 """
@@ -141,6 +161,24 @@ class Author:
         self.__MatrixAllFiles = TransitionMatrix(alllines)
         return self.__MatrixAllFiles
 
+    def centroid_matrix(self):
+        """
+            This function returns the centroid matrix.
+            * A centroid matrix is the average for each of all the matrices
+            from this authors.
+            * It's not necessarily a transition matrix anymore.
+        :return:
+            A numpy matrix.
+        """
+        pass
+
+    def distance_from_centroid(self):
+        """
+
+        :return:
+        """
+
+
 
 
 def test_authors():
@@ -168,35 +206,12 @@ def main():
     print("Matrix row sums =", np.sum(matrix, axis=1).ravel()) # not guarantee add up to 1 all the time
 
 
+
 # test code
 if __name__ == '__main__':
-    # main()
-    test_authors()
-
-
-
-
-# simple case
-'''
-if __name__ == '__main__':
-    t = transition_matrix('simple_case.txt')
-    matrix = t.matrix
-    if (matrix[0][0] == 1):
-        print("PASS SIMPLE CASE")
-    else:
-        print("FAIL SIMPLE CASE")
-#ascii case
-if __name__ == '__main__':
-    t = transition_matrix('ascii_case.txt')
-    matrix = t.matrix
-    real_matrix = np.zeros((54, 54))
-    for i in range(53):
-        real_matrix[i][i+1] = 1
-    if np.array_equal(matrix, real_matrix):
-        print("PASS ASCII CASE")
-    else:
-        print("FAIL ASCII CASE")'''
-
+    # main() 
+    # test_authors()
+    pass
 
 
 
