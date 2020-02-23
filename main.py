@@ -42,8 +42,9 @@ class TransitionMatrix:
         :param lines:
             Provide strings is also ok, it will take an array of lines to construct the matrix.
         """
-        self.matrix = np.zeros((55, 55))
-
+        n = len(TransitionMatrix.characters)
+        Characters = TransitionMatrix.characters
+        self.matrix = np.zeros((n,n))
 
         for line in lines:
             line = list(line)
@@ -51,8 +52,8 @@ class TransitionMatrix:
                 continue
             for i, c2 in enumerate(line[1:]):
                 c1 = line[i]
-                indx1 = TransitionMatrix.characters.find(c1)
-                indx2 = TransitionMatrix.characters.find(c2)
+                indx1 = Characters.find(c1)
+                indx2 = Characters.find(c2)
                 self.matrix[indx1, indx2] += 1
 
         for i in range(self.matrix.shape[0]):
@@ -101,16 +102,20 @@ class Author:
             FilePath2Lines[f] = file_readlines(f)
         self.__FilePathToLines = FilePath2Lines
 
+        self.__MatrixEachFile = None
+        self.__MatrixAllFiles = None
+        self.__AuthorWorks = list(self.__FilePathToLines.items())
+
     def get_fp2lines(self):
         return self.__FilePathToLines
 
-    def filepath_list(self):
+    def list_of_works(self):
         return list(self.__FilePathToLines.keys())
 
-    def filelines_list(self):
+    def list_of_works_content(self):
         return list(self.__FilePathToLines.values())
 
-    def matrix_eachfile(self, partition = 1):
+    def matrix_eachfile(self):
         """
         :param partition:
             For each file, the user has the option to partition the matrix.
@@ -118,21 +123,24 @@ class Author:
         :return:
             A list of the instances for the TransitionalMatrix, each corresponds to a file of the author.
         """
-        if partition == 1:
-            return [TransitionMatrix(lines) for lines in self.filelines_list()]
-        pass
+        if self.__MatrixEachFile is not None:
+            return self.__MatrixEachFile
+        self.__MatrixEachFile = [TransitionMatrix(lines) for lines in self.list_of_works_content()]
+        return self.__MatrixEachFile
 
     def matrix_allfiles(self):
         """
             combine all the lines in the file into one single work.
             Then create the transitional matrix for this authors, treating all his works as one big line of text.
         """
+        if self.__MatrixAllFiles is not None:
+            return self.MatriAllFiles
         alllines = []
-        for writing in self.filelines_list():
+        for writing in self.list_of_works_content():
             alllines += writing
-        return TransitionMatrix(alllines)
+        self.__MatrixAllFiles = TransitionMatrix(alllines)
+        return self.__MatrixAllFiles
 
-    
 
 
 def test_authors():
