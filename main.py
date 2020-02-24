@@ -17,6 +17,8 @@ ENCODING = "utf8"
 CHARLES_DICKENS = "data/Charles Dickens"
 MARK_TWAIN = "data/Mark Twain"
 
+np.set_printoptions(threshold=np.inf, precision=2, linewidth=1000)
+
 
 def file_readlines(filepath:str):
     """
@@ -124,11 +126,13 @@ class Author:
         :return:
             A list of np matrix.
         """
-        Res = None
+        res = None
         if self.__MatrixEachFile is not None:
             res = [M.npmatrix for M in self.__MatrixEachFile]
-        self.__MatrixEachFile = [TransitionMatrix(lines) for lines in self.list_of_works_content()]
-        return [M.npmatrix for M in self.__MatrixEachFile]
+        else:
+            self.__MatrixEachFile = [TransitionMatrix(lines) for lines in self.list_of_works_content()]
+            res = [M.npmatrix for M in self.__MatrixEachFile]
+        return res
 
     def aggregate_matrix(self):
         """
@@ -141,7 +145,6 @@ class Author:
         """
         if self.__MatrixAllFiles is not None:
             return self.__MatrixAllFiles.npmatrix
-
         alllines = []
         for writing in self.list_of_works_content():
             alllines += writing
@@ -201,13 +204,11 @@ class Author:
             A float.
         """
         m1 = self.centroid_matrix() if mode == 1 else self.aggregate_matrix()
-        return np.linalg(m1 - m2, norm)
+        return np.linalg.norm(m1 - m2, norm)
 
 
 
-
-
-def dis_between_authors(author1, author2, norm = 2, mode=1):
+def dis_between_authors(author1, author2, norm=2, mode=1):
     """
         This function returns 1 number to represent the distance between 2 author's
         works.
@@ -225,8 +226,8 @@ def dis_between_authors(author1, author2, norm = 2, mode=1):
     :return:
         a float.
     """
-    
-    pass
+    author1 = author1.centroid_matrix() if mode == 1 else author1.aggregate_matrix()
+    return author2.distance_to(author1, norm, mode)
 
 def test_authors():
     Author1 = Author(CHARLES_DICKENS)
@@ -248,7 +249,19 @@ def test_authors():
     print("------- List of euclidean distances from the aggregate matrix of the author: ---")
     print(Author1.distance_list(mode=2))
 
+    print("----- one norm distance from the centroid of this author: ----")
+    print(Author1.distance_list(norm=1))
+
+    print("----- infinity from the centroid for this author: ----")
+    print(Author1.distance_list(norm = np.inf))
+
     print("------ Creating another author and compare the old author to the new author. ")
+    Author2 = Author(MARK_TWAIN)
+
+    print("------ The distance between 2 centroid of the authors is: ----")
+    print(f"norm={2}: {dis_between_authors(Author1, Author2)}")
+    print(f"norm={1}: {dis_between_authors(Author1, Author2, norm=1)}")
+
 
 def main():
     pass
