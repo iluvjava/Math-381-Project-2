@@ -46,7 +46,7 @@ class TransitionMatrix:
         """
         n = len(TransitionMatrix.characters)
         Characters = TransitionMatrix.characters
-        self.matrix = np.zeros((n,n))
+        self.npmatrix = np.zeros((n, n))
 
         for line in lines:
             line = list(line)
@@ -56,12 +56,12 @@ class TransitionMatrix:
                 c1 = line[i]
                 indx1 = Characters.find(c1)
                 indx2 = Characters.find(c2)
-                self.matrix[indx1, indx2] += 1
+                self.npmatrix[indx1, indx2] += 1
 
-        for i in range(self.matrix.shape[0]):
-            s = np.sum(self.matrix[i])
+        for i in range(self.npmatrix.shape[0]):
+            s = np.sum(self.npmatrix[i])
             if s > 0:
-                self.matrix[i] /= s
+                self.npmatrix[i] /= s
 
     def missing_states(self):
         """
@@ -72,39 +72,21 @@ class TransitionMatrix:
             A list letters that didn't appear in the lines of text.
         """
         res = []
-        for I, RowSum in enumerate(self.matrix.sum(axis=1)):
+        for I, RowSum in enumerate(self.npmatrix.sum(axis=1)):
             if RowSum == 0.0:
                 res.append(TransitionMatrix.characters[I])
         return res
 
 
     def __repr__(self):
-        return str(self.matrix)
-
-
-def distance_between(MatrixA, MatrixB, norm=2):
-    """
-        This function takes in 2 instances of the class TransitionalMatrix
-        and returns the distance between these 2 matrices.
-        * The function takes the norm of the matrix (A - B)
-    :param MatrixA:
-        Matrix A.
-    :param MatrixB:
-        Matrix B.
-    :param norm:
-        There is the choice of choosing what kind of norm to measure the
-        distance between these 2 matrices.
-    :return:
-        A float representing the distance between these 2 matrices.
-    """
-    pass
-
+        return str(self.npmatrix)
 
 
 """
 Files for an author and transitional matrix for the author. 
 * Transitional Matrix classified by each files in the folder
 * For each file, there will be several transitional matrices for parts of the files. 
+* All the matrices will be in the same order as the list of works.
 """
 class Author:
 
@@ -122,9 +104,9 @@ class Author:
             FilePath2Lines[f] = file_readlines(f)
         self.__FilePathToLines = FilePath2Lines
 
-        self.__MatrixEachFile = None
-        self.__MatrixAllFiles = None
-        self.__AuthorWorks = list(self.__FilePathToLines.items())
+        self.__MatrixEachFile = None # Stored as an instance of transition matrix.
+        self.__MatrixAllFiles = None # Instance of transition matrix.
+        self.__AuthorWorksList = list(self.__FilePathToLines.items())
 
     def get_fp2lines(self):
         return self.__FilePathToLines
@@ -135,31 +117,36 @@ class Author:
     def list_of_works_content(self):
         return list(self.__FilePathToLines.values())
 
-    def matrix_eachfile(self):
+    def get_matrices(self):
         """
-        :param partition:
-            For each file, the user has the option to partition the matrix.
-            For this case, there will be multiple transitional matrices for a single given file.
+            This function returns a transition matrix for each work of the author.
+            each work of the author is a file in the author's folder.
         :return:
-            A list of the instances for the TransitionalMatrix, each corresponds to a file of the author.
+            A list of np matrix.
         """
+        Res = None
         if self.__MatrixEachFile is not None:
-            return self.__MatrixEachFile
+            res = [M.npmatrix for M in self.__MatrixEachFile]
         self.__MatrixEachFile = [TransitionMatrix(lines) for lines in self.list_of_works_content()]
-        return self.__MatrixEachFile
+        return [M.npmatrix for M in self.__MatrixEachFile]
 
-    def matrix_allfiles(self):
+    def aggregate_matrix(self):
         """
-            combine all the lines in the file into one single work.
-            Then create the transitional matrix for this authors, treating all his works as one big line of text.
+            combine all the lines in the folder into one single work.
+            Then create the transitional matrix for this author,
+            treating all his works as one text.
+            * Results are stored after first time computing it.
+        :return:
+            An npmatrix
         """
         if self.__MatrixAllFiles is not None:
-            return self.MatriAllFiles
+            return self.__MatrixAllFiles.npmatrix
+
         alllines = []
         for writing in self.list_of_works_content():
             alllines += writing
         self.__MatrixAllFiles = TransitionMatrix(alllines)
-        return self.__MatrixAllFiles
+        return self.__MatrixAllFiles.npmatrix
 
     def centroid_matrix(self):
         """
@@ -170,47 +157,106 @@ class Author:
         :return:
             A numpy matrix.
         """
-        pass
+        TransitionMatrices = self.get_matrices()
+        N = len(TransitionMatrices)
+        CentroidMatrix = np.zeros(TransitionMatrices[0].shape)
+        for TM in TransitionMatrices:
+            CentroidMatrix += TM
+        CentroidMatrix /= N
+        return CentroidMatrix
 
-    def distance_from_centroid(self):
+    def distance_list(self, norm=2, mode=1):
         """
-
+            The function will calculate the distance for all the transition matrix
+            from each file.
+        :param mode:
+            mode == 1:
+                Using the centroid as the center of this author.
+            mode != 1:
+                Using the aggregate matrix as the center of this author.
         :return:
+            A map; the key is the name of the file and the
+            value is the distance from teh centroid matrix.
         """
+        DistanceMap = {}
+        Center = self.centroid_matrix() if mode == 1 else self.aggregate_matrix()
+        for Writing, Matrix in zip(self.list_of_works(), self.get_matrices()):
+            DistanceMap[Writing] = np.linalg.norm(Matrix - Center, norm)
+        return DistanceMap
+
+    def distance_to(self, m2, norm=2, mode=1):
+        """
+            The function return the distance of this author to a given transition
+            matrix of the same size.
+            * How the distance is calculated depends on the input
+            parameters.
+        :param norm:
+            The matrix to norm to calculate the distances.
+        :param mdoe:
+            mode==1:
+                Distance from the centroid of the author.
+            mode != 1:
+                Distance from the aggregate matrix of the author.
+        :return:
+            A float.
+        """
+        m1 = self.centroid_matrix() if mode == 1 else self.aggregate_matrix()
+        return np.linalg(m1 - m2, norm)
 
 
 
+
+
+def dis_between_authors(author1, author2, norm = 2, mode=1):
+    """
+        This function returns 1 number to represent the distance between 2 author's
+        works.
+    :param author1:
+        An instance of an Author class.
+    :param author2:
+        An instance of an Author class.
+    :param norm:
+        The matrix norm to use to measure distance.
+    :param mode:
+        mode == 1:
+            Measure the distance by the difference between 2 centroids.
+        mode != 1:
+            Measure the distance by the difference between 2 aggregate matrix.
+    :return:
+        a float.
+    """
+    
+    pass
 
 def test_authors():
-    instance = Author(CHARLES_DICKENS)
-    print(len(instance.get_fp2lines()))
-    print(instance.get_fp2lines().keys())
-    print(instance.matrix_eachfile())
+    Author1 = Author(CHARLES_DICKENS)
+    print(len(Author1.get_fp2lines()))
+    print(Author1.get_fp2lines().keys())
     print("-----Here is a list of numpy matrix from author: ")
-    for M in instance.matrix_eachfile():
+    for M in Author1.get_matrices():
         print(M)
-        print(f"The missing states for the transitional matrix:{M.missing_states()}")
 
-    print("-------Here is the transitional matrix for all lines of works from the author:")
-    print(instance.matrix_allfiles())
+    print("------ This is the centroid matrix-----")
+    print(Author1.centroid_matrix())
+
+    print("-------This is the aggregate matrix -----")
+    print(Author1.aggregate_matrix())
+
+    print("-------List of euclidean distances from the centroid of the author:----")
+    print(Author1.distance_list())
+
+    print("------- List of euclidean distances from the aggregate matrix of the author: ---")
+    print(Author1.distance_list(mode=2))
+
+    print("------ Creating another author and compare the old author to the new author. ")
 
 def main():
-    try:
-        t = TransitionMatrix('allNone_case.txt')
-    except:
-        print("Error is Expected.")
-    t = TransitionMatrix('tester.txt')
-    matrix = t.matrix
-    print("Matrix shape =", matrix.shape)
-    print([[round(matrix[I, J], 5) for I in range(55)] for J in range(55)])
-    print("Matrix row sums =", np.sum(matrix, axis=1).ravel()) # not guarantee add up to 1 all the time
-
-
+    pass
 
 # test code
 if __name__ == '__main__':
-    # main() 
-    # test_authors()
+    main()
+    test_authors()
     pass
 
 
