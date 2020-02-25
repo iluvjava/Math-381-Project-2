@@ -1,18 +1,21 @@
-
 """
 Group 4, this is for the Project 2.
 
 
 """
 import numpy as np
+import matplotlib.pyplot as plt
 from string import ascii_letters
-from typing import List, Callable
+from typing import List, Callable, Type
 import re
+import enum
 
 from os import listdir
 from os.path import isfile
-__all__ = ["Author", "dis_between_authors", "get_tm55", "get_tm27", "get_2ndtm", "get_3ndtm_nonsquare","CHARLES_DICKENS",
-           "MARK_TWAIN"]
+
+__all__ = ["Author", "dis_between_authors", "get_tm55", "get_tm27", "get_2ndtm", "get_3ndtm_nonsquare",
+           "CHARLES_DICKENS",
+           "MARK_TWAIN", "CentroidOption", "MatrixMetricSpace"]
 
 ENCODING = "utf8"
 
@@ -36,6 +39,7 @@ def process_text(filepath: str):
     with open(filepath, 'r', encoding=ENCODING) as f:
         return [l.strip() for l in f.readlines()]
 
+
 def trim_line(s: str):
     """
         This function trims off all the punctuations in the line and collapse the
@@ -56,10 +60,11 @@ def trim_line(s: str):
         if char in NonAlphabet:
             Res = Res + ' '
         elif char == Astrophe:
-            continue # Strip off apostrophe.
+            continue  # Strip off apostrophe.
         else:
             Res += char if char in characters else ""
     return re.sub(' +', ' ', Res.lower())
+
 
 def get_tm27(lines: List[str]):
     """
@@ -83,13 +88,14 @@ def get_tm27(lines: List[str]):
             indx1 = characters.find(c1)
             indx2 = characters.find(c2)
             if (indx1 == -1 or indx2 == -1):
-                continue # Skip non alphabetical characters.
+                continue  # Skip non alphabetical characters.
             matrix[indx1, indx2] += 1
     for i in range(27):
         s = np.sum(matrix[i])
         if s > 0:
             matrix[i] /= s
     return matrix
+
 
 def get_tm55(lines: List[str]):
     """
@@ -123,6 +129,7 @@ def get_tm55(lines: List[str]):
             npmatrix[i] /= s
     return npmatrix
 
+
 def get_2ndtm(lines: List[str]):
     """
         Given the content of the file separated by lines, this function will return the
@@ -136,16 +143,17 @@ def get_2ndtm(lines: List[str]):
     """
     Alphabet = ascii_letters[0:26] + " "
     l = len(Alphabet)
-    n = l**2
-    npmatrix = np.zeros((n,n))
+    n = l ** 2
+    npmatrix = np.zeros((n, n))
+
     def s(letter):
         return Alphabet.find(letter)
 
     for Line in lines:
         Line = trim_line(Line)
         for I in range(len(Line) - 3):
-            i = s(Line[I])*l + s(Line[I + 1])
-            j = s(Line[I + 2])*l + s(Line[I + 3])
+            i = s(Line[I]) * l + s(Line[I + 1])
+            j = s(Line[I + 2]) * l + s(Line[I + 3])
             npmatrix[i, j] += 1
 
     for i in range(npmatrix.shape[0]):
@@ -165,15 +173,16 @@ def get_3ndtm_nonsquare(lines: List[str]):
     """
     Alphabet = ascii_letters[0:26] + " "
     l = len(Alphabet)
-    n = l**2
-    npmatrix = np.zeros((l**3,l))
+    n = l ** 2
+    npmatrix = np.zeros((l ** 3, l))
+
     def s(letter):
         return Alphabet.find(letter)
 
     for Line in lines:
         Line = trim_line(Line)
         for I in range(len(Line) - 3):
-            i = s(Line[I])*l**2 + s(Line[I + 1])*l + s(Line[I + 2])
+            i = s(Line[I]) * l ** 2 + s(Line[I + 1]) * l + s(Line[I + 2])
             j = s(Line[I + 3])
             npmatrix[i, j] += 1
 
@@ -184,16 +193,51 @@ def get_3ndtm_nonsquare(lines: List[str]):
     return npmatrix
 
 
+class CentroidOption(enum.Enum):
+    """
+    An enum class to represent the options for center of the author cloud.
+    """
+    AggregateMatrix = 1
+    CtroidMatrix = 2
 
-"""
-Files for an author and transitional matrix for the author. 
-* Transitional Matrix classified by each files in the folder
-* For each file, there will be several transitional matrices for parts of the files. 
-* All the matrices will be in the same order as the list of works.
-"""
+
+class MatrixMetricSpace(enum.Enum):
+    """
+    An enum class to represent the options of measuring distance between matrices.
+    """
+    OneNorm = 1
+    TwoNorm = 2
+    FebNorm = 3  # Euclidean distance
+    WeightedNorm = 4
+
+MMS = Type[MatrixMetricSpace]
+CO = Type[CentroidOption]
+def dis(Matrix1, Matrix2, MetricSpace:MMS, WeightVec1 = None, WeightVec2 = None):
+    """
+        This function returns the distance between 2 matrices, given
+        the type of Metric space and the weights.
+    :param Matrix1:
+        A numpy matrix.
+    :param Matrix2:
+        A numpy matrix.
+    :param WeightVec1:
+        A numpy vector
+    :param WeightVec2:
+        A numpy vector.
+    :return:
+        A float.
+    """
+    pass # TODO: Implement shit shit.
+
 class Author:
+    """
+    Files for an author and transitional matrix for the author.
+    * Transitional Matrix classified by each files in the folder
+    * For each file, there will be several transitional matrices for parts of the files.
+    * All the matrices will be in the same order as the list of works.
+    """
 
-    def __init__(self, dir:str, matrixfunction: Callable = get_tm27):
+    def __init__(self, dir: str, matrixfunction: Callable = get_tm27):
         """
             Create an instance of an author by specifying:
                 * A directory containing all text files written by the author.
@@ -218,8 +262,8 @@ class Author:
 
         self.__TMFunction = matrixfunction
 
-        self.__NpMatrices = None # a list of np matrices for each works of the author
-        self.__AggregateMatrix = None # Instance of transition matrix.
+        self.__NpMatrices = None  # a list of np matrices for each works of the author
+        self.__AggregateMatrix = None  # Instance of transition matrix.
         self.__AuthorItems = list(self.__FilePathToLines.items())
 
     def get_fp2lines(self):
@@ -296,8 +340,21 @@ class Author:
         DistanceMap = {}
         Center = self.centroid_matrix() if mode == 1 else self.aggregate_matrix()
         for Writing, Matrix in zip(self.list_of_works(), self.get_matrices()):
-            DistanceMap[Writing] = np.linalg.norm(Matrix - Center, norm)
+            DistanceMap[Writing.split("/")[-1]] = np.linalg.norm(Matrix - Center, norm)
         return DistanceMap
+
+    def author_cloud(self, center: CO, norm: MMS):
+        """
+            * The average distance.
+            * the standard deviations of the distance.
+            * A map describing the distance from the center, mapping
+            author's works to a distance represented in a float value.
+        :return:
+            2 items:
+            1. [<average distance>, <standard deviation>]
+            2. A map, string to float.
+        """
+        pass # TODO: Implement this shit.
 
     def distance_to(self, m2, norm=2, mode=1):
         """
@@ -343,18 +400,24 @@ def dis_between_authors(author1, author2, norm=2, mode=1):
 
 def test_authors():
     print("----Creating the 2nd order transition matrix for Charles Dickens")
-    charles = Author(CHARLES_DICKENS, get_2ndtm)
+    charles = Author(CHARLES_DICKENS, get_tm27)
     print("----Computing the distance of his works to the centroid. ")
     distancelist = charles.distance_list(mode=2)
-    print(f"The average distance from the centroid: {sum(distancelist.values())/len(distancelist)}")
+    print(f"The average distance from the centroid: {sum(distancelist.values()) / len(distancelist)}")
 
     print("---- Mark as an author: ")
-    mark = Author(MARK_TWAIN, get_2ndtm)
+    mark = Author(MARK_TWAIN, get_tm27)
     distancelist = mark.distance_list(mode=2)
-    print(f"The average distance from the centroid: {sum(distancelist.values())/len(distancelist)}")
+    print(f"The average distance from the centroid: {sum(distancelist.values()) / len(distancelist)}")
 
     print("distance between the 2 authors: ")
     print(dis_between_authors(mark, charles, mode=2))
+
+    aggregateDifference = mark.aggregate_matrix() - charles.aggregate_matrix()
+
+    plt.matshow(aggregateDifference)
+    plt.colorbar()
+    plt.show()
 
 
 def test_matrices():
@@ -364,6 +427,7 @@ def test_matrices():
 
     pass
 
+
 def main():
     pass
 
@@ -371,9 +435,5 @@ def main():
 if __name__ == '__main__':
     # main()
     test_authors()
-    #test_matrices()
+    # test_matrices()
     pass
-
-
-
-
