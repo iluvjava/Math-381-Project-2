@@ -142,8 +142,40 @@ def get_2ndtm(lines: List[str]):
     for Line in lines:
         Line = trim_line(Line)
         for I in range(len(Line) - 3):
-            i = s(Line[I]) + s(Line[I + 1])*l
-            j = s(Line[I + 2]) + s(Line[I + 3])*l
+            i = s(Line[I])*l + s(Line[I + 1])
+            j = s(Line[I + 2])*l + s(Line[I + 3])
+            npmatrix[i, j] += 1
+
+    for i in range(npmatrix.shape[0]):
+        s = np.sum(npmatrix[i])
+        if s > 0:
+            npmatrix[i] /= s
+    return npmatrix
+
+
+def get_3ndtm(lines: List[str]):
+    """
+        Given the content of the file separated by lines, this function will return the
+        26^2 by 26^2 transition matrix.
+        * It's a second order transition matrix based on the letters of the alphabet.
+        * Spaces will be included as the last states of the matrix.
+    :param lines:
+        The content of the file represented in the an array of lines.
+    :return:
+        The np matrix.
+    """
+    Alphabet = ascii_letters[0:26] + " "
+    l = len(Alphabet)
+    n = l**2
+    npmatrix = np.zeros((l**3,l))
+    def s(letter):
+        return Alphabet.find(letter)
+
+    for Line in lines:
+        Line = trim_line(Line)
+        for I in range(len(Line) - 3):
+            i = s(Line[I])*l**2 + s(Line[I + 1])*l + s(Line[I + 2])
+            j = s(Line[I + 3])
             npmatrix[i, j] += 1
 
     for i in range(npmatrix.shape[0]):
@@ -314,16 +346,16 @@ def test_authors():
     print("----Creating the 2nd order transition matrix for Charles Dickens")
     charles = Author(CHARLES_DICKENS, get_2ndtm)
     print("----Computing the distance of his works to the centroid. ")
-    distancelist = charles.distance_list()
+    distancelist = charles.distance_list(mode=2)
     print(f"The average distance from the centroid: {sum(distancelist.values())/len(distancelist)}")
 
     print("---- Mark as an author: ")
     mark = Author(MARK_TWAIN, get_2ndtm)
-    distancelist = mark.distance_list()
+    distancelist = mark.distance_list(mode=2)
     print(f"The average distance from the centroid: {sum(distancelist.values())/len(distancelist)}")
 
     print("distance between the 2 authors: ")
-    print(dis_between_authors(mark, charles))
+    print(dis_between_authors(mark, charles, mode=2))
 
 
 def test_matrices():
