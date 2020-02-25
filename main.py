@@ -11,6 +11,8 @@ import re
 
 from os import listdir
 from os.path import isfile
+__all__ = ["Author", "dis_between_authors", "get_tm55", "get_tm27", "get_2ndtm", "get_3ndtm_nonsquare","CHARLES_DICKENS",
+           "MARK_TWAIN"]
 
 ENCODING = "utf8"
 
@@ -153,12 +155,9 @@ def get_2ndtm(lines: List[str]):
     return npmatrix
 
 
-def get_3ndtm(lines: List[str]):
+def get_3ndtm_nonsquare(lines: List[str]):
     """
-        Given the content of the file separated by lines, this function will return the
-        26^2 by 26^2 transition matrix.
-        * It's a second order transition matrix based on the letters of the alphabet.
-        * Spaces will be included as the last states of the matrix.
+       Non square 3rd order matrix.
     :param lines:
         The content of the file represented in the an array of lines.
     :return:
