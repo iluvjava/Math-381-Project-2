@@ -15,7 +15,7 @@ from os.path import isfile
 
 __all__ = ["Author", "dis_between_authors", "get_tm55", "get_tm27", "get_2ndtm", "get_3ndtm_nonsquare",
            "CHARLES_DICKENS",
-           "MARK_TWAIN", "CentroidOption", "MatrixMetricSpace"]
+           "MARK_TWAIN", "CentroidOption", "MatrixMetric"]
 
 ENCODING = "utf8"
 
@@ -201,18 +201,17 @@ class CentroidOption(enum.Enum):
     CtroidMatrix = 2
 
 
-class MatrixMetricSpace(enum.Enum):
+class MatrixMetric(enum.Enum):
     """
     An enum class to represent the options of measuring distance between matrices.
     """
     OneNorm = 1
     TwoNorm = 2
-    FebNorm = 3  # Euclidean distance
     WeightedNorm = 4
 
-MMS = Type[MatrixMetricSpace]
+MM = Type[MatrixMetric]
 CO = Type[CentroidOption]
-def dis(Matrix1, Matrix2, MetricSpace:MMS, WeightVec1 = None, WeightVec2 = None):
+def dis(Matrix1, Matrix2, Metric:MM, WeightVec1 = None, WeightVec2 = None):
     """
         This function returns the distance between 2 matrices, given
         the type of Metric space and the weights.
@@ -227,7 +226,15 @@ def dis(Matrix1, Matrix2, MetricSpace:MMS, WeightVec1 = None, WeightVec2 = None)
     :return:
         A float.
     """
-    pass # TODO: Implement shit shit.
+    if Metric == MatrixMetric.OneNorm:
+        return np.linalg.norm(Matrix1 - Matrix2, 1)
+    elif Metric == MatrixMetric.TwoNorm:
+        return np.linalg.norm(Matrix1 - Matrix2)
+    elif Metric == MatrixMetric.WeightedNorm:
+        raise RuntimeError("WeightedNorm not yet implemented. ")
+    else:
+        raise RuntimeError("Invalid Matrix metric space. ")
+
 
 class Author:
     """
@@ -236,7 +243,8 @@ class Author:
     * For each file, there will be several transitional matrices for parts of the files.
     * All the matrices will be in the same order as the list of works.
     """
-
+    CentroidType = CentroidOption.AggregateMatrix
+    MetricType = MatrixMetric.TwoNorm
     def __init__(self, dir: str, matrixfunction: Callable = get_tm27):
         """
             Create an instance of an author by specifying:
@@ -259,9 +267,8 @@ class Author:
             FilePath2Lines[f] = process_text(f)
         # A map that maps the file path to array of lines containing the content of the file.
         self.__FilePathToLines = FilePath2Lines
-
+        self.__AuthorName = dir.split("/")[-1]
         self.__TMFunction = matrixfunction
-
         self.__NpMatrices = None  # a list of np matrices for each works of the author
         self.__AggregateMatrix = None  # Instance of transition matrix.
         self.__AuthorItems = list(self.__FilePathToLines.items())
@@ -290,7 +297,7 @@ class Author:
             res = self.__NpMatrices
         return res
 
-    def aggregate_matrix(self):
+    def __aggregate_matrix(self):
         """
             combine all the lines in the folder into one single work.
             Then create the transitional matrix for this author,
@@ -307,7 +314,7 @@ class Author:
         self.__AggregateMatrix = self.__TMFunction(alllines)
         return self.__AggregateMatrix
 
-    def centroid_matrix(self):
+    def __average_matrix(self):
         """
             This function returns the centroid matrix.
             * A centroid matrix is the average for each of all the matrices
@@ -324,7 +331,23 @@ class Author:
         CentroidMatrix /= N
         return CentroidMatrix
 
-    def distance_list(self, norm=2, mode=1):
+    def get_center(self):
+        """
+            Returns a matrix representing the center of the author,
+            The type of matrix depends on the global options for the authors.
+        :return:
+            An Np matrix.
+        """
+        Center = None
+        if Author.CentroidType == CentroidOption.AggregateMatrix:
+            Center = self.__aggregate_matrix()
+        elif Author.CentroidType == CentroidOption.CtroidMatrix:
+            Center = self.__average_matrix()
+        else:
+            raise RuntimeError("Unspecified Centroid Option.")
+        return Center
+
+    def distance_list(self):
         """
             The function will calculate the distance for all the transition matrix
             from each file.
@@ -338,12 +361,13 @@ class Author:
             value is the distance from teh centroid matrix.
         """
         DistanceMap = {}
-        Center = self.centroid_matrix() if mode == 1 else self.aggregate_matrix()
+        Center = self.get_center()
         for Writing, Matrix in zip(self.list_of_works(), self.get_matrices()):
-            DistanceMap[Writing.split("/")[-1]] = np.linalg.norm(Matrix - Center, norm)
+            DistanceMap[Writing.split("/")[-1]] =\
+                dis(Matrix, Center, Metric=Author.MetricType, WeightVec1=None, WeightVec2=None)
         return DistanceMap
 
-    def author_cloud(self, center: CO, norm: MMS):
+    def author_cloud(self):
         """
             * The average distance.
             * the standard deviations of the distance.
@@ -356,7 +380,7 @@ class Author:
         """
         pass # TODO: Implement this shit.
 
-    def distance_to(self, m2, norm=2, mode=1):
+    def distance_to(self, m2):
         """
             The function return the distance of this author to a given transition
             matrix of the same size.
@@ -372,11 +396,11 @@ class Author:
         :return:
             A float.
         """
-        m1 = self.centroid_matrix() if mode == 1 else self.aggregate_matrix()
-        return np.linalg.norm(m1 - m2, norm)
+        m1 = self.get_center()
+        return dis(m1, m2, Metric=Author.MetricType, WeightVec1=None, WeightVec2=None)
 
 
-def dis_between_authors(author1, author2, norm=2, mode=1):
+def dis_between_authors(author1, author2):
     """
         This function returns 1 number to represent the distance between 2 author's
         works.
@@ -394,39 +418,23 @@ def dis_between_authors(author1, author2, norm=2, mode=1):
     :return:
         a float.
     """
-    author1 = author1.centroid_matrix() if mode == 1 else author1.aggregate_matrix()
-    return author2.distance_to(author1, norm, mode)
+    return author2.distance_to(author1.get_center())
 
 
 def test_authors():
     print("----Creating the 2nd order transition matrix for Charles Dickens")
     charles = Author(CHARLES_DICKENS, get_tm27)
     print("----Computing the distance of his works to the centroid. ")
-    distancelist = charles.distance_list(mode=2)
+    distancelist = charles.distance_list()
     print(f"The average distance from the centroid: {sum(distancelist.values()) / len(distancelist)}")
 
     print("---- Mark as an author: ")
     mark = Author(MARK_TWAIN, get_tm27)
-    distancelist = mark.distance_list(mode=2)
+    distancelist = mark.distance_list()
     print(f"The average distance from the centroid: {sum(distancelist.values()) / len(distancelist)}")
 
     print("distance between the 2 authors: ")
-    print(dis_between_authors(mark, charles, mode=2))
-
-    aggregateDifference = mark.aggregate_matrix() - charles.aggregate_matrix()
-
-    plt.matshow(aggregateDifference)
-    plt.colorbar()
-    plt.show()
-
-
-def test_matrices():
-    lines = ['AaAa']
-    npmatrix = get_2ndtm(lines)
-    print(npmatrix)
-
-    pass
-
+    print(dis_between_authors(mark, charles))
 
 def main():
     pass
