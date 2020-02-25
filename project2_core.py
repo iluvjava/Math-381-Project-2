@@ -198,7 +198,7 @@ class CentroidOption(enum.Enum):
     An enum class to represent the options for center of the author cloud.
     """
     AggregateMatrix = 1
-    CtroidMatrix = 2
+    AverageMatrix = 2
 
 
 class MatrixMetric(enum.Enum):
@@ -290,6 +290,9 @@ class Author:
     def list_of_works_content(self):
         return list(self.__FilePathToLines.values())
 
+    def name(self):
+        return self.__AuthorName
+
     def get_matrices(self):
         """
             This function returns a transition matrix for each work of the author.
@@ -349,7 +352,7 @@ class Author:
         Center = None
         if Author.CentroidType == CentroidOption.AggregateMatrix:
             Center = self.__aggregate_matrix()
-        elif Author.CentroidType == CentroidOption.CtroidMatrix:
+        elif Author.CentroidType == CentroidOption.AverageMatrix:
             Center = self.__average_matrix()
         else:
             raise RuntimeError("Unspecified Centroid Option.")
@@ -415,7 +418,6 @@ class Author:
         m1 = self.get_center()
         return dis(m1, m2, Metric=Author.MetricType, WeightVec1=None, WeightVec2=None)
 
-
     def __repr__(self):
         s = "-------------------AUTHOR INFO---------------------\n"
         s += f"Author's Name: {self.__AuthorName} \n"
@@ -428,7 +430,7 @@ class Author:
             s += f"{(Work+':').ljust(TitleMaxLength)} : {'{:10.4f}'.format(dis)} \n"
         s += f"Matrix Norm used: {Author.MetricType}\n"
         s += f"Centroid Matrix is: {Author.CentroidType}\n"
-        s += f"Function used to generate transition matrix: {self.__TMFunction.__name__}"
+        s += f"Function used to generate transition matrix: {self.__TMFunction.__name__}\n"
         return s
 
 
