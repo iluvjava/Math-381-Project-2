@@ -18,7 +18,7 @@ ENCODING = "utf8"
 CHARLES_DICKENS = "data/Charles Dickens"
 MARK_TWAIN = "data/Mark Twain"
 
-np.set_printoptions(threshold=np.inf, precision=2, linewidth=1000)
+np.set_printoptions(threshold=10, precision=2, linewidth=1000)
 
 
 def process_text(filepath: str):
@@ -36,14 +36,17 @@ def process_text(filepath: str):
 
 def trim_line(s: str):
     """
-        This function trims off all the punctuations in the line and collpase the
+        This function trims off all the punctuations in the line and collapse the
         spaces in the text.
+        * The return string is going to contains only alphabetical letters
+        with single space between it.
     :param s:
         Single line of string, should be trimmed
     :return:
         A new line of string that is trimmed.
     """
     s = s.strip()
+    characters = ascii_letters + " '"
     NonAlphabet = '''!()-[]{};:"\,<>./?@#$%^&*_~=0123456789+`|'''
     Astrophe = "'"
     Res = ""
@@ -53,7 +56,7 @@ def trim_line(s: str):
         elif char == Astrophe:
             continue # Strip off apostrophe.
         else:
-            Res += char
+            Res += char if char in characters else ""
     return re.sub(' +', ' ', Res.lower())
 
 def get_tm27(lines: List[str]):
@@ -129,8 +132,25 @@ def get_2ndtm(lines: List[str]):
     :return:
         The np matrix.
     """
+    Alphabet = ascii_letters[0:26] + " "
+    l = len(Alphabet)
+    n = l**2
+    npmatrix = np.zeros((n,n))
+    def s(letter):
+        return Alphabet.find(letter)
 
-    pass
+    for Line in lines:
+        Line = trim_line(Line)
+        for I in range(len(Line) - 3):
+            i = s(Line[I]) + s(Line[I + 1])*l
+            j = s(Line[I + 2]) + s(Line[I + 3])*l
+            npmatrix[i, j] += 1
+
+    for i in range(npmatrix.shape[0]):
+        s = np.sum(npmatrix[i])
+        if s > 0:
+            npmatrix[i] /= s
+    return npmatrix
 
 
 
@@ -291,46 +311,36 @@ def dis_between_authors(author1, author2, norm=2, mode=1):
 
 
 def test_authors():
-    Author1 = Author(CHARLES_DICKENS)
-    print(len(Author1.get_fp2lines()))
-    print(Author1.get_fp2lines().keys())
-    print("-----Here is a list of numpy matrix from author: ")
-    for M in Author1.get_matrices():
-        print(M)
+    print("----Creating the 2nd order transition matrix for Charles Dickens")
+    charles = Author(CHARLES_DICKENS, get_2ndtm)
+    print("----Computing the distance of his works to the centroid. ")
+    distancelist = charles.distance_list()
+    print(f"The average distance from the centroid: {sum(distancelist.values())/len(distancelist)}")
 
-    print("------ This is the centroid matrix-----")
-    print(Author1.centroid_matrix())
+    print("---- Mark as an author: ")
+    mark = Author(MARK_TWAIN, get_2ndtm)
+    distancelist = mark.distance_list()
+    print(f"The average distance from the centroid: {sum(distancelist.values())/len(distancelist)}")
 
-    print("-------This is the aggregate matrix -----")
-    print(Author1.aggregate_matrix())
+    print("distance between the 2 authors: ")
+    print(dis_between_authors(mark, charles))
 
-    print("-------List of euclidean distances from the centroid of the author:----")
-    print(Author1.distance_list())
 
-    print("------- List of euclidean distances from the aggregate matrix of the author: ---")
-    print(Author1.distance_list(mode=2))
+def test_matrices():
+    lines = ['AaAa']
+    npmatrix = get_2ndtm(lines)
+    print(npmatrix)
 
-    print("----- one norm distance from the centroid of this author: ----")
-    print(Author1.distance_list(norm=1))
-
-    print("----- infinity from the centroid for this author: ----")
-    print(Author1.distance_list(norm = np.inf))
-
-    print("------ Creating another author and compare the old author to the new author. ")
-    Author2 = Author(MARK_TWAIN)
-
-    print("------ The distance between 2 centroid of the authors is: ----")
-    print(f"norm={2}: {dis_between_authors(Author1, Author2)}")
-    print(f"norm={1}: {dis_between_authors(Author1, Author2, norm=1)}")
-
+    pass
 
 def main():
     pass
 
 
 if __name__ == '__main__':
-    main()
+    # main()
     test_authors()
+    #test_matrices()
     pass
 
 
