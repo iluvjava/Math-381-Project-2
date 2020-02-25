@@ -7,6 +7,7 @@ Group 4, this is for the Project 2.
 import numpy as np
 from string import ascii_letters
 from typing import List
+import re
 
 from os import listdir
 from os.path import isfile
@@ -20,12 +21,12 @@ MARK_TWAIN = "data/Mark Twain"
 np.set_printoptions(threshold=np.inf, precision=2, linewidth=1000)
 
 
-def file_readlines(filepath:str):
+def process_text(filepath: str):
     """
     Function reads lines from the file, with the new line character stripped off from
     the line
 
-    :param filename:
+    :param filepath:
         The file path.
     :return:
     A array of string. Each string is a line in the file.
@@ -33,55 +34,114 @@ def file_readlines(filepath:str):
     with open(filepath, 'r', encoding=ENCODING) as f:
         return [l.strip() for l in f.readlines()]
 
-class TransitionMatrix:
+def trim_line(s):
+    """
+        This function trims off all the punctuations in the line and collpase the
+        spaces in the text.
+    :param s:
+        Single line of string, should be trimmed
+    :return:
+        A new line of string that is trimmed.
+    """
+    s = s.strip()
+    NonAlphabet = '''!()-[]{};:"\,<>./?@#$%^&*_~=0123456789+`|'''
+    Astrophe = "'"
+    Res = ""
+    for char in s:
+        if char in NonAlphabet:
+            Res = Res + ' '
+        elif char == Astrophe:
+            continue # Strip off apostrophe.
+        else:
+            Res += char
+    return re.sub(' +', ' ', Res.lower())
+
+def get_tm27(lines):
+    """
+        Function takes the path of a file and returns the transition
+        matrix based on the 26 letters in the alphabet,
+        The last states of the matrix is space.
+        * All spaces are collapsed.
+        * All punctuations are ignored.
+        * The apostrophe is stripped off from the text.
+    :param lines:
+        An array of lines that is in the file.
+    :return:
+    """
+    matrix = np.zeros((27, 27))
+    characters = ascii_letters[0:26] + " "
+    for line in lines:
+        trimmed_line = trim_line(line)
+        line = list(trimmed_line)
+        for i, c2 in enumerate(line[1:]):
+            c1 = line[i]
+            indx1 = characters.find(c1)
+            indx2 = characters.find(c2)
+            if (indx1 == -1 or indx2 == -1):
+                continue # Skip non alphabetical characters.
+            matrix[indx1, indx2] += 1
+    for i in range(27):
+        s = np.sum(matrix[i])
+        if s > 0:
+            matrix[i] /= s
+    return matrix
+
+def get_tm55(lines):
+    """
+        This function creates a matrix of 55 states.
+        All the letters in lower cases and capitalized letters.
+        It will also mark the apostrophe as the observable state.
+        All other characters will be put into a hidden state.
+    :param lines:
+        A array of lines read from the file.
+    :return:
+        np matrix.
+    """
     characters = ascii_letters + " '"
+    n = len(characters)
+    Characters = TransitionMatrix.characters
+    npmatrix = np.zeros((n, n))
+    for line in lines:
+        line = list(line)
+        if len(line) == 0:
+            continue
+        for i, c2 in enumerate(line[1:]):
+            c1 = line[i]
+            indx1 = Characters.find(c1)
+            indx2 = Characters.find(c2)
+            npmatrix[indx1, indx2] += 1
 
-    def __init__(self, lines:List[List[str]]=None):
-        """
-            creates a transitional matrix for the given text.
-            This is the ordering the states:
-            abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ '<None>
-        :param filename:
-            The file path
-        :param lines:
-            Provide strings is also ok, it will take an array of lines to construct the matrix.
-        """
-        n = len(TransitionMatrix.characters)
-        Characters = TransitionMatrix.characters
-        self.npmatrix = np.zeros((n, n))
+    for i in range(npmatrix.shape[0]):
+        s = np.sum(npmatrix[i])
+        if s > 0:
+            npmatrix[i] /= s
+    return npmatrix
 
-        for line in lines:
-            line = list(line)
-            if len(line) == 0:
-                continue
-            for i, c2 in enumerate(line[1:]):
-                c1 = line[i]
-                indx1 = Characters.find(c1)
-                indx2 = Characters.find(c2)
-                self.npmatrix[indx1, indx2] += 1
+def get_2ndtm(lines):
+    pass
 
-        for i in range(self.npmatrix.shape[0]):
-            s = np.sum(self.npmatrix[i])
-            if s > 0:
-                self.npmatrix[i] /= s
-
-    def missing_states(self):
-        """
-            Sometimes not all the letters in the alphabet are used,
-            This method will return a list of characters that are not
-            used in the lines of text.
-        :return:
-            A list letters that didn't appear in the lines of text.
-        """
-        res = []
-        for I, RowSum in enumerate(self.npmatrix.sum(axis=1)):
-            if RowSum == 0.0:
-                res.append(TransitionMatrix.characters[I])
-        return res
-
-
-    def __repr__(self):
-        return str(self.npmatrix)
+# class TransitionMatrix:
+#     characters = ascii_letters + " '"
+#
+#     def __init__(self, lines:List[List[str]]=None):
+#         pass
+#
+#     def missing_states(self):
+#         """
+#             Sometimes not all the letters in the alphabet are used,
+#             This method will return a list of characters that are not
+#             used in the lines of text.
+#         :return:
+#             A list letters that didn't appear in the lines of text.
+#         """
+#         res = []
+#         for I, RowSum in enumerate(self.npmatrix.sum(axis=1)):
+#             if RowSum == 0.0:
+#                 res.append(TransitionMatrix.characters[I])
+#         return res
+#
+#     def __repr__(self):
+#         return str(self.npmatrix)
 
 
 """
@@ -92,7 +152,7 @@ Files for an author and transitional matrix for the author.
 """
 class Author:
 
-    def __init__(self, dir:str):
+    def __init__(self, dir:str, matrixfunction=get_tm27: function):
         FilePathList = []
         for filename in listdir(dir):
             filepath = dir + "/" + filename
@@ -103,12 +163,14 @@ class Author:
 
         FilePath2Lines = {}
         for f in FilePathList:
-            FilePath2Lines[f] = file_readlines(f)
+            FilePath2Lines[f] = process_text(f)
         self.__FilePathToLines = FilePath2Lines
 
-        self.__MatrixEachFile = None # Stored as an instance of transition matrix.
-        self.__MatrixAllFiles = None # Instance of transition matrix.
-        self.__AuthorWorksList = list(self.__FilePathToLines.items())
+        self.__TMFunction = matrixfunction
+
+        self.__NpMatrices = None # a list of np matrices for each works of the author
+        self.__AggregateMatrix = None # Instance of transition matrix.
+        self.__AuthorItems = list(self.__FilePathToLines.items())
 
     def get_fp2lines(self):
         return self.__FilePathToLines
@@ -127,11 +189,11 @@ class Author:
             A list of np matrix.
         """
         res = None
-        if self.__MatrixEachFile is not None:
-            res = [M.npmatrix for M in self.__MatrixEachFile]
+        if self.__NpMatrices is not None:
+            res = self.__NpMatrices
         else:
-            self.__MatrixEachFile = [TransitionMatrix(lines) for lines in self.list_of_works_content()]
-            res = [M.npmatrix for M in self.__MatrixEachFile]
+            self.__NpMatrices = [self.__TMFunction(lines) for lines in self.list_of_works_content()]
+            res = self.__NpMatrices
         return res
 
     def aggregate_matrix(self):
@@ -143,13 +205,13 @@ class Author:
         :return:
             An npmatrix
         """
-        if self.__MatrixAllFiles is not None:
-            return self.__MatrixAllFiles.npmatrix
+        if self.__AggregateMatrix is not None:
+            return self.__AggregateMatrix
         alllines = []
         for writing in self.list_of_works_content():
             alllines += writing
-        self.__MatrixAllFiles = TransitionMatrix(alllines)
-        return self.__MatrixAllFiles.npmatrix
+        self.__AggregateMatrix = self.__TMFunction(alllines)
+        return self.__AggregateMatrix
 
     def centroid_matrix(self):
         """
@@ -207,7 +269,6 @@ class Author:
         return np.linalg.norm(m1 - m2, norm)
 
 
-
 def dis_between_authors(author1, author2, norm=2, mode=1):
     """
         This function returns 1 number to represent the distance between 2 author's
@@ -228,6 +289,7 @@ def dis_between_authors(author1, author2, norm=2, mode=1):
     """
     author1 = author1.centroid_matrix() if mode == 1 else author1.aggregate_matrix()
     return author2.distance_to(author1, norm, mode)
+
 
 def test_authors():
     Author1 = Author(CHARLES_DICKENS)
@@ -266,7 +328,7 @@ def test_authors():
 def main():
     pass
 
-# test code
+
 if __name__ == '__main__':
     main()
     test_authors()
