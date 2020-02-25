@@ -6,11 +6,15 @@ from os import listdir
 from os.path import isfile, isdir
 from typing import Callable
 
+
+
 class Authors:
     """
         This class models a bunch of authors.
     """
-    def __init__(self, MatrixGeneratingFunction: Callable, CentroidType=CentroidOption.AggregateMatrix):
+    def __init__(self, MatrixGeneratingFunction: Callable,
+                 CentroidType=CentroidOption.AggregateMatrix,
+                 Metric=MatrixMetric.TwoNorm):
         AuthorsFolders = []
         for d in listdir(AUTHORS_FOLDER):
             d = AUTHORS_FOLDER + "/" + d
@@ -18,6 +22,8 @@ class Authors:
                 AuthorsFolders.append(d)
         assert len(AuthorsFolders) > 0, "Author's Folder is empty"
         self.__AuthorList = []
+        Author.CentroidType = CentroidType
+        Author.MetricType = Metric
         for AuthorDir in AuthorsFolders:
             self.__AuthorList.append(Author(AuthorDir, MatrixGeneratingFunction))
         self.__AuthorNameList = [A.name() for A in self.__AuthorList]
