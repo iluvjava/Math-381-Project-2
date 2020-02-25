@@ -4,12 +4,12 @@ Group 4, this is for the Project 2.
 
 """
 import numpy as np
-import matplotlib.pyplot as plt
+
 from string import ascii_letters
 from typing import List, Callable, Type
 import re
 import enum
-
+import math
 from os import listdir
 from os.path import isfile
 
@@ -209,6 +209,7 @@ class MatrixMetric(enum.Enum):
     TwoNorm = 2
     WeightedNorm = 4
 
+
 MM = Type[MatrixMetric]
 CO = Type[CentroidOption]
 def dis(Matrix1, Matrix2, Metric:MM, WeightVec1 = None, WeightVec2 = None):
@@ -274,10 +275,17 @@ class Author:
         self.__AuthorItems = list(self.__FilePathToLines.items())
 
     def get_fp2lines(self):
+        """
+            A map where the key is the path of the file of an author's work, and the
+            value is a list of string, representing the raw content of the
+            work written by the author.
+            * The text in the line is un-processed.
+        :return:
+        """
         return self.__FilePathToLines
 
     def list_of_works(self):
-        return list(self.__FilePathToLines.keys())
+        return [work.split("/")[-1] for work in list(self.__FilePathToLines.keys())]
 
     def list_of_works_content(self):
         return list(self.__FilePathToLines.values())
@@ -347,7 +355,7 @@ class Author:
             raise RuntimeError("Unspecified Centroid Option.")
         return Center
 
-    def distance_list(self):
+    def work_distances(self):
         """
             The function will calculate the distance for all the transition matrix
             from each file.
@@ -363,8 +371,7 @@ class Author:
         DistanceMap = {}
         Center = self.get_center()
         for Writing, Matrix in zip(self.list_of_works(), self.get_matrices()):
-            DistanceMap[Writing.split("/")[-1]] =\
-                dis(Matrix, Center, Metric=Author.MetricType, WeightVec1=None, WeightVec2=None)
+            DistanceMap[Writing] = dis(Matrix, Center, Metric=Author.MetricType, WeightVec1=None, WeightVec2=None)
         return DistanceMap
 
     def author_cloud(self):
@@ -378,7 +385,16 @@ class Author:
             1. [<average distance>, <standard deviation>]
             2. A map, string to float.
         """
-        pass # TODO: Implement this shit.
+        DistanceList = self.work_distances()
+        Sum = 0
+        Squaresum = 0
+        L = len(DistanceList)
+        for Distance in DistanceList.values():
+            Sum += Distance
+            Squaresum += Distance**2
+        Sum/=L
+        Squaresum/=L
+        return [Sum, math.sqrt(Squaresum - Sum**2)], DistanceList
 
     def distance_to(self, m2):
         """
@@ -398,6 +414,22 @@ class Author:
         """
         m1 = self.get_center()
         return dis(m1, m2, Metric=Author.MetricType, WeightVec1=None, WeightVec2=None)
+
+
+    def __repr__(self):
+        s = "-------------------AUTHOR INFO---------------------\n"
+        s += f"Author's Name: {self.__AuthorName} \n"
+        s += "Distances of his works from the center:\n"
+        Cloud, DistanceList = self.author_cloud()
+        s += f"Average Distance from the center: {Cloud[0]}\n"
+        s += f"Standard deviation of the distances: {Cloud[1]}\n"
+        TitleMaxLength = max(len(W) for W in DistanceList.keys())
+        for Work, dis in DistanceList.items():
+            s += f"{(Work+':').ljust(TitleMaxLength)} : {'{:10.4f}'.format(dis)} \n"
+        s += f"Matrix Norm used: {Author.MetricType}\n"
+        s += f"Centroid Matrix is: {Author.CentroidType}\n"
+        s += f"Function used to generate transition matrix: {self.__TMFunction.__name__}"
+        return s
 
 
 def dis_between_authors(author1, author2):
@@ -422,19 +454,14 @@ def dis_between_authors(author1, author2):
 
 
 def test_authors():
-    print("----Creating the 2nd order transition matrix for Charles Dickens")
     charles = Author(CHARLES_DICKENS, get_tm27)
-    print("----Computing the distance of his works to the centroid. ")
-    distancelist = charles.distance_list()
-    print(f"The average distance from the centroid: {sum(distancelist.values()) / len(distancelist)}")
-
-    print("---- Mark as an author: ")
     mark = Author(MARK_TWAIN, get_tm27)
-    distancelist = mark.distance_list()
-    print(f"The average distance from the centroid: {sum(distancelist.values()) / len(distancelist)}")
 
-    print("distance between the 2 authors: ")
-    print(dis_between_authors(mark, charles))
+
+    print(charles)
+    print(mark)
+    print(f"Distance of the centroid of these 2 authors: {dis_between_authors(charles, mark)}")
+
 
 def main():
     pass
