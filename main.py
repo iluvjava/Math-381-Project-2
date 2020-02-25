@@ -129,6 +129,7 @@ def get_2ndtm(lines: List[str]):
     :return:
         The np matrix.
     """
+
     pass
 
 
