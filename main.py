@@ -6,7 +6,7 @@ Group 4, this is for the Project 2.
 """
 import numpy as np
 from string import ascii_letters
-from typing import List
+from typing import List, Callable
 import re
 
 from os import listdir
@@ -34,7 +34,7 @@ def process_text(filepath: str):
     with open(filepath, 'r', encoding=ENCODING) as f:
         return [l.strip() for l in f.readlines()]
 
-def trim_line(s):
+def trim_line(s: str):
     """
         This function trims off all the punctuations in the line and collpase the
         spaces in the text.
@@ -56,7 +56,7 @@ def trim_line(s):
             Res += char
     return re.sub(' +', ' ', Res.lower())
 
-def get_tm27(lines):
+def get_tm27(lines: List[str]):
     """
         Function takes the path of a file and returns the transition
         matrix based on the 26 letters in the alphabet,
@@ -86,9 +86,10 @@ def get_tm27(lines):
             matrix[i] /= s
     return matrix
 
-def get_tm55(lines):
+def get_tm55(lines: List[str]):
     """
-        This function creates a matrix of 55 states.
+        This function creates a matrix of 55 states given the raw inputs from the file
+        as an array of strings.
         All the letters in lower cases and capitalized letters.
         It will also mark the apostrophe as the observable state.
         All other characters will be put into a hidden state.
@@ -99,7 +100,7 @@ def get_tm55(lines):
     """
     characters = ascii_letters + " '"
     n = len(characters)
-    Characters = TransitionMatrix.characters
+    Characters = characters
     npmatrix = np.zeros((n, n))
     for line in lines:
         line = list(line)
@@ -117,31 +118,19 @@ def get_tm55(lines):
             npmatrix[i] /= s
     return npmatrix
 
-def get_2ndtm(lines):
+def get_2ndtm(lines: List[str]):
+    """
+        Given the content of the file separated by lines, this function will return the
+        26^2 by 26^2 transition matrix.
+        * It's a second order transition matrix based on the letters of the alphabet.
+        * Spaces will be included as the last states of the matrix.
+    :param lines:
+        The content of the file represented in the an array of lines.
+    :return:
+        The np matrix.
+    """
     pass
 
-# class TransitionMatrix:
-#     characters = ascii_letters + " '"
-#
-#     def __init__(self, lines:List[List[str]]=None):
-#         pass
-#
-#     def missing_states(self):
-#         """
-#             Sometimes not all the letters in the alphabet are used,
-#             This method will return a list of characters that are not
-#             used in the lines of text.
-#         :return:
-#             A list letters that didn't appear in the lines of text.
-#         """
-#         res = []
-#         for I, RowSum in enumerate(self.npmatrix.sum(axis=1)):
-#             if RowSum == 0.0:
-#                 res.append(TransitionMatrix.characters[I])
-#         return res
-#
-#     def __repr__(self):
-#         return str(self.npmatrix)
 
 
 """
@@ -152,7 +141,15 @@ Files for an author and transitional matrix for the author.
 """
 class Author:
 
-    def __init__(self, dir:str, matrixfunction=get_tm27: function):
+    def __init__(self, dir:str, matrixfunction: Callable = get_tm27):
+        """
+            Create an instance of an author by specifying:
+                * A directory containing all text files written by the author.
+        :param dir:
+            The directory of the folder.
+        :param matrixfunction:
+            A function you want to use to genereate the transition matrices for the authors.
+        """
         FilePathList = []
         for filename in listdir(dir):
             filepath = dir + "/" + filename
@@ -164,6 +161,7 @@ class Author:
         FilePath2Lines = {}
         for f in FilePathList:
             FilePath2Lines[f] = process_text(f)
+        # A map that maps the file path to array of lines containing the content of the file.
         self.__FilePathToLines = FilePath2Lines
 
         self.__TMFunction = matrixfunction
