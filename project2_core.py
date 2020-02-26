@@ -4,6 +4,7 @@ Group 4, this is for the Project 2.
 
 """
 import numpy as np
+import matplotlib.pyplot as plt
 
 from string import ascii_letters
 from typing import List, Callable, Type
@@ -453,6 +454,19 @@ def dis_between_authors(author1, author2):
         a float.
     """
     return author2.distance_to(author1.get_center())
+
+
+def visualize_author(theauthor, theplot):
+    """
+        Function will use matplot lib to plot out the transition matrix of the author.
+        It will show the plot, and it will also save the image into the root directory.
+        *
+    :param theauthor:
+        An instance of the class Author.
+    :return:
+        An instance of matlplot.
+    """
+    pass # TODO: IMPLEMENT THIS SHIT.
 
 
 def test_authors():

@@ -44,10 +44,6 @@ class Authors:
         return s
 
 
-
-
-
-
 if __name__ == "__main__":
-
     print(Authors(get_2ndtm))
+    
