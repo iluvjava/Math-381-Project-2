@@ -18,12 +18,10 @@ __all__ = ["Author", "dis_between_authors", "get_tm55", "get_tm27", "get_2ndtm",
            "CHARLES_DICKENS",
            "MARK_TWAIN", "CentroidOption", "MatrixMetric"]
 
-ENCODING = "utf8"
-
 # A list of authors' directory:
 CHARLES_DICKENS = "data/Charles Dickens"
 MARK_TWAIN = "data/Mark Twain"
-
+ENCODING = "utf8"
 np.set_printoptions(threshold=10, precision=2, linewidth=1000)
 
 
@@ -194,21 +192,28 @@ def get_3ndtm_nonsquare(lines: List[str]):
     return npmatrix
 
 
+def get_3rdtm(lines: List[str]):
+    raise RuntimeError("Not yet Implemented. ")
+
+
 class CentroidOption(enum.Enum):
     """
     An enum class to represent the options for center of the author cloud.
     """
-    AggregateMatrix = 1
-    AverageMatrix = 2
+    AggregateMatrix = 1 # Taking the average among all works of the author.
+    AverageMatrix = 2 # Treating all works as one single block of text.
 
 
 class MatrixMetric(enum.Enum):
     """
     An enum class to represent the options of measuring distance between matrices.
     """
-    OneNorm = 1
-    TwoNorm = 2
-    WeightedNorm = 4
+    OneNorm = 1 # Matrix 1 norm
+    TwoNorm = 2 # Matrix Euclidean distance
+    WeightedNorm = 3 # Matrix weighted by PD matrix.
+    HighPower2Norm = 4 # Raising matrix to high power and take the 2 norm.
+    Vectorized1Norm = 5
+
 
 
 MM = Type[MatrixMetric]
@@ -234,6 +239,11 @@ def dis(Matrix1, Matrix2, Metric:MM, WeightVec1 = None, WeightVec2 = None):
         return np.linalg.norm(Matrix1 - Matrix2)
     elif Metric == MatrixMetric.WeightedNorm:
         raise RuntimeError("WeightedNorm not yet implemented. ")
+    elif Metric == MatrixMetric.HighPower2Norm:
+        # Might take a long time.
+        return np.linalg.norm(Matrix1**10 - Matrix2**10)
+    elif Metric == MatrixMetric.Vectorized1Norm:
+        return np.linalg.norm(np.matrix.ravel(Matrix1) - np.matrix.ravel(Matrix2), 1)
     else:
         raise RuntimeError("Invalid Matrix metric space. ")
 
@@ -428,7 +438,7 @@ class Author:
         s += f"Standard deviation of the distances: {Cloud[1]}\n"
         TitleMaxLength = max(len(W) for W in DistanceList.keys())
         for Work, dis in DistanceList.items():
-            s += f"{(Work+':').ljust(TitleMaxLength)} : {'{:10.4f}'.format(dis)} \n"
+            s += f"{(Work+':').ljust(TitleMaxLength)} {'{:10.4f}'.format(dis)} \n"
         s += f"Matrix Norm used: {Author.MetricType}\n"
         s += f"Centroid Matrix is: {Author.CentroidType}\n"
         s += f"Function used to generate transition matrix: {self.__TMFunction.__name__}\n"
@@ -464,19 +474,9 @@ def visualize_author(theauthor, theplot):
     :param theauthor:
         An instance of the class Author.
     :return:
-        An instance of matlplot.
+        An instance of matplot.
     """
     pass # TODO: IMPLEMENT THIS SHIT.
-
-
-def test_authors():
-    charles = Author(CHARLES_DICKENS, get_tm27)
-    mark = Author(MARK_TWAIN, get_tm27)
-
-
-    print(charles)
-    print(mark)
-    print(f"Distance of the centroid of these 2 authors: {dis_between_authors(charles, mark)}")
 
 
 def main():
@@ -484,7 +484,5 @@ def main():
 
 
 if __name__ == '__main__':
-    # main()
-    test_authors()
-    # test_matrices()
+
     pass
