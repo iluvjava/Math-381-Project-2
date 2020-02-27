@@ -14,9 +14,9 @@ import math
 from os import listdir
 from os.path import isfile
 
-__all__ = ["Author", "dis_between_authors", "get_tm55", "get_tm27", "get_2ndtm", "get_3ndtm_nonsquare",
+__all__ = ["Author", "dis_between_authors", "get_tm55", "get_tm27", "get_2ndtm",
            "CHARLES_DICKENS",
-           "MARK_TWAIN", "CentroidOption", "MatrixMetric"]
+           "MARK_TWAIN", "CentroidOption", "MatrixMetric", "AuthorMetric"]
 
 # A list of authors' directory:
 CHARLES_DICKENS = "data/Charles Dickens"
@@ -215,6 +215,21 @@ class MatrixMetric(enum.Enum):
     Vectorized1Norm = 5
 
 
+class AuthorMetric(enum.Enum):
+    """
+    THis is a enum class consists of method that can be used to determine the distance
+    between the cloud of an author to a transition matrix.
+    ! This option only specifies how to determing the distance of an author with a transition
+    matrix!
+    """
+    MinimumDis = 1 # The distance between the author and a given transition matrix is the minimum distance
+    # of any work of the author to that transition matrix.
+
+    AverageDis = 2 # Taking the average distance of the given transition matrix with respect to
+    # All the matrices of the author.
+
+    CentroidDis = 3 # This metric take the matrix norm on the difference of 2 centroids of the author.
+
 
 MM = Type[MatrixMetric]
 CO = Type[CentroidOption]
@@ -256,7 +271,8 @@ class Author:
     * All the matrices will be in the same order as the list of works.
     """
     CentroidType = CentroidOption.AggregateMatrix
-    MetricType = MatrixMetric.TwoNorm
+    MMetricType = MatrixMetric.TwoNorm
+    AMetrictype = AuthorMetric.CentroidDis
     def __init__(self, dir: str, matrixfunction: Callable = get_tm27):
         """
             Create an instance of an author by specifying:
@@ -385,7 +401,7 @@ class Author:
         DistanceMap = {}
         Center = self.get_center()
         for Writing, Matrix in zip(self.list_of_works(), self.get_matrices()):
-            DistanceMap[Writing] = dis(Matrix, Center, Metric=Author.MetricType, WeightVec1=None, WeightVec2=None)
+            DistanceMap[Writing] = dis(Matrix, Center, Metric=Author.MMetricType, WeightVec1=None, WeightVec2=None)
         return DistanceMap
 
     def author_cloud(self):
@@ -426,8 +442,15 @@ class Author:
         :return:
             A float.
         """
-        m1 = self.get_center()
-        return dis(m1, m2, Metric=Author.MetricType, WeightVec1=None, WeightVec2=None)
+        centroid = self.get_center()
+        if Author.AMetrictype == AuthorMetric.CentroidDis:
+            return dis(centroid, m2, Metric=Author.MMetricType, WeightVec1=None, WeightVec2=None)
+        temp = [dis(m1, m2, Metric=Author.MMetricType) for m1 in self.get_matrices()]
+        if Author.AMetrictype == AuthorMetric.MinimumDis:
+            return min(temp)
+        if Author.AMetrictype == AuthorMetric.AverageDis: # Not sure if symmetry property is preserved.
+            return sum(temp)/len(temp)
+        raise("Invalid Author Metric. ")
 
     def __repr__(self):
         s = "-------------------AUTHOR INFO---------------------\n"
@@ -439,7 +462,7 @@ class Author:
         TitleMaxLength = max(len(W) for W in DistanceList.keys())
         for Work, dis in DistanceList.items():
             s += f"{(Work+':').ljust(TitleMaxLength)} {'{:10.4f}'.format(dis)} \n"
-        s += f"Matrix Norm used: {Author.MetricType}\n"
+        s += f"Matrix Norm used: {Author.MMetricType}\n"
         s += f"Centroid Matrix is: {Author.CentroidType}\n"
         s += f"Function used to generate transition matrix: {self.__TMFunction.__name__}\n"
         return s
@@ -453,17 +476,20 @@ def dis_between_authors(author1, author2):
         An instance of an Author class.
     :param author2:
         An instance of an Author class.
-    :param norm:
-        The matrix norm to use to measure distance.
-    :param mode:
-        mode == 1:
-            Measure the distance by the difference between 2 centroids.
-        mode != 1:
-            Measure the distance by the difference between 2 aggregate matrix.
+    :param metric
+        A type of author metric. 
     :return:
         a float.
     """
-    return author2.distance_to(author1.get_center())
+    metric = Author.AMetrictype
+    if metric == AuthorMetric.CentroidDis:
+        return author2.distance_to(author1.get_center)
+    temp = [author1.distance_to(Author2Works) for Author2Works in author2.get_matrices()]
+    if metric == AuthorMetric.AverageDis:
+        return sum(temp)/len(temp)
+    if metric == AuthorMetric.MinimumDis:
+        return min(temp)
+    raise RuntimeError("Invalid AuthorMetricOption")
 
 
 def visualize_author(theauthor, theplot):
