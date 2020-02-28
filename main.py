@@ -57,15 +57,13 @@ class Authors:
 
 if __name__ == "__main__":
 
-    theinstance = Authors(get_tm27, Mmtric=MatrixMetric.Vectorized1Norm,
-                  CentroidType=CentroidOption.AggregateMatrix,
-                  Ametric=AuthorMetric.MinimumDis)
-
-    for am in AuthorMetric:
-        for mmt in MatrixMetric:
-            theinstance.change_mmetric(mmt)
-            theinstance.change_amatric(am)
-            print(theinstance)
+    for f in [get_2ndtm, get_tm27, get_tm55]:
+        theinstance = Authors(f)
+        for am in AuthorMetric:
+            for mmt in MatrixMetric:
+                theinstance.change_mmetric(mmt)
+                theinstance.change_amatric(am)
+                print(theinstance)
     s =\
 """
     ================================
