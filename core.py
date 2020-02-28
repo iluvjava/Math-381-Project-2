@@ -483,7 +483,7 @@ def dis_between_authors(author1, author2):
     """
     metric = Author.AMetricType
     if metric == AuthorMetric.CentroidDis:
-        return author2.distance_to(author1.get_center)
+        return author2.distance_to(author1.get_center())
     temp = [author1.distance_to(Author2Works) for Author2Works in author2.get_matrices()]
     if metric == AuthorMetric.AverageDis:
         return sum(temp)/len(temp)

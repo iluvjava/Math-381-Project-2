@@ -51,6 +51,7 @@ class Authors:
             s += "\n"
         s += f"The matrix metric is: {Author.MMetricType}\n"
         s += f"The Author metric is: {Author.AMetricType}\n"
+        s += "======================================================"
         return s
 
 
@@ -59,27 +60,32 @@ if __name__ == "__main__":
     theinstance = Authors(get_tm27, Mmtric=MatrixMetric.Vectorized1Norm,
                   CentroidType=CentroidOption.AggregateMatrix,
                   Ametric=AuthorMetric.MinimumDis)
-    for mmt in MatrixMetric:
-        theinstance.change_mmetric(mmt)
-        print(theinstance)
 
-
-
-
-    # print(Authors(get_tm27, Metric=MatrixMetric.HighPower2Norm))
-    #
-    # print("===================================================")
-    # print(Authors(get_tm27, Metric=MatrixMetric.Vectorized1Norm))
-    #
-    # print("===================================================")
-    # print(Authors(get_2ndtm, Metric=MatrixMetric.Vectorized1Norm))
-    #
-    #
-    # print(Authors(get_tm27, Metric=MatrixMetric.HighPower2Norm, CentroidType=CentroidOption.AverageMatrix))
-    #
-    # print("===================================================")
-    # print(Authors(get_tm27, Metric=MatrixMetric.Vectorized1Norm, CentroidType=CentroidOption.AverageMatrix))
-    #
-    # print("===================================================")
-    # print(Authors(get_2ndtm, Metric=MatrixMetric.Vectorized1Norm, CentroidType=CentroidOption.AverageMatrix))
-
+    for am in AuthorMetric:
+        for mmt in MatrixMetric:
+            theinstance.change_mmetric(mmt)
+            theinstance.change_amatric(am)
+            print(theinstance)
+    s =\
+"""
+    ================================
+    | How to interpret the output? |
+    ================================
+    Each authors cloud information is printed in blocks, with 
+    the option printed. 
+    
+    All the author together has information on distances between 
+    all pairs of author, for example, if the following is printed: 
+    -------------------------------------------------------------
+    | Charles Dickens | Mark Twain | Mark Twain's Lost Text |
+    3.9300    4.3990
+    3.3338
+    -------------------------------------------------------------
+    It means that, the distance between "Charles Dickens" and "Mark Twain" is 3.9300,
+    the distance between "Charles Dickens" and "Mark Twain's Lost Text" is 4.3990;
+    and the distance between "Mark Twain" and "Mark Twain's Lost text" is 3.3338.
+    
+    The list can be longer, each i th row is basically the distance from work 
+    i to i+1, i+2 all the way to the end of the list of authors.  
+"""
+    print(s)
