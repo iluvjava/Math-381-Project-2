@@ -219,7 +219,7 @@ class AuthorMetric(enum.Enum):
     """
     THis is a enum class consists of method that can be used to determine the distance
     between the cloud of an author to a transition matrix.
-    ! This option only specifies how to determing the distance of an author with a transition
+    ! This option only specifies how to determine the distance of an author with a transition
     matrix!
     """
     MinimumDis = 1 # The distance between the author and a given transition matrix is the minimum distance
