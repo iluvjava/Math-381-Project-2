@@ -1,4 +1,4 @@
-from project2_core import *
+from core import *
 
 
 AUTHORS_FOLDER = "data"
@@ -23,16 +23,16 @@ class Authors:
         self.__AuthorList = []
         Author.CentroidType = CentroidType
         Author.MMetricType = Mmtric
-        Author.AMetrictype = Ametric
+        Author.AMetricType = Ametric
         for AuthorDir in AuthorsFolders:
             self.__AuthorList.append(Author(AuthorDir, MatrixGeneratingFunction))
         self.__AuthorNameList = [A.name() for A in self.__AuthorList]
 
     def change_mmetric(self, m: Type[MatrixMetric]):
-        Author.MMetrictype = m
+        Author.MMetricType = m
 
     def change_amatric(self, m: Type[AuthorMetric]):
-        Author.AMetrictype = m
+        Author.AMetricType = m
 
     def __repr__(self):
         s = ""
@@ -50,15 +50,20 @@ class Authors:
                 s += '{:10.4f}'.format(dis_between_authors(A[I], A[J]))
             s += "\n"
         s += f"The matrix metric is: {Author.MMetricType}\n"
-        s += f"The Author metric is: {Author.AMetrictype}\n"
+        s += f"The Author metric is: {Author.AMetricType}\n"
         return s
 
 
 if __name__ == "__main__":
 
-    print(Authors(get_tm27, Mmtric=MatrixMetric.Vectorized1Norm,
+    theinstance = Authors(get_tm27, Mmtric=MatrixMetric.Vectorized1Norm,
                   CentroidType=CentroidOption.AggregateMatrix,
-                  Ametric=AuthorMetric.MinimumDis))
+                  Ametric=AuthorMetric.MinimumDis)
+    for mmt in MatrixMetric:
+        theinstance.change_mmetric(mmt)
+        print(theinstance)
+
+
 
 
     # print(Authors(get_tm27, Metric=MatrixMetric.HighPower2Norm))

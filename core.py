@@ -210,8 +210,8 @@ class MatrixMetric(enum.Enum):
     """
     OneNorm = 1 # Matrix 1 norm
     TwoNorm = 2 # Matrix Euclidean distance
-    WeightedNorm = 3 # Matrix weighted by PD matrix.
-    HighPower2Norm = 4 # Raising matrix to high power and take the 2 norm.
+    # WeightedNorm = 3 # Matrix weighted by PD matrix.
+    # HighPower2Norm = 4 # Raising matrix to high power and take the 2 norm.
     Vectorized1Norm = 5
 
 
@@ -252,11 +252,10 @@ def dis(Matrix1, Matrix2, Metric:MM, WeightVec1 = None, WeightVec2 = None):
         return np.linalg.norm(Matrix1 - Matrix2, 1)
     elif Metric == MatrixMetric.TwoNorm:
         return np.linalg.norm(Matrix1 - Matrix2)
-    elif Metric == MatrixMetric.WeightedNorm:
-        raise RuntimeError("WeightedNorm not yet implemented. ")
-    elif Metric == MatrixMetric.HighPower2Norm:
-        # Might take a long time.
-        return np.linalg.norm(Matrix1**10 - Matrix2**10)
+    # elif Metric == MatrixMetric.WeightedNorm:
+    #     raise RuntimeError("WeightedNorm not yet implemented. ")
+    # elif Metric == MatrixMetric.HighPower2Norm:
+    #     return np.linalg.norm(Matrix1**10 - Matrix2**10)
     elif Metric == MatrixMetric.Vectorized1Norm:
         return np.linalg.norm(np.matrix.ravel(Matrix1) - np.matrix.ravel(Matrix2), 1)
     else:
@@ -272,7 +271,8 @@ class Author:
     """
     CentroidType = CentroidOption.AggregateMatrix
     MMetricType = MatrixMetric.TwoNorm
-    AMetrictype = AuthorMetric.CentroidDis
+    AMetricType = AuthorMetric.CentroidDis
+
     def __init__(self, dir: str, matrixfunction: Callable = get_tm27):
         """
             Create an instance of an author by specifying:
@@ -443,12 +443,12 @@ class Author:
             A float.
         """
         centroid = self.get_center()
-        if Author.AMetrictype == AuthorMetric.CentroidDis:
+        if Author.AMetricType == AuthorMetric.CentroidDis:
             return dis(centroid, m2, Metric=Author.MMetricType, WeightVec1=None, WeightVec2=None)
         temp = [dis(m1, m2, Metric=Author.MMetricType) for m1 in self.get_matrices()]
-        if Author.AMetrictype == AuthorMetric.MinimumDis:
+        if Author.AMetricType == AuthorMetric.MinimumDis:
             return min(temp)
-        if Author.AMetrictype == AuthorMetric.AverageDis: # Not sure if symmetry property is preserved.
+        if Author.AMetricType == AuthorMetric.AverageDis: # Not sure if symmetry property is preserved.
             return sum(temp)/len(temp)
         raise("Invalid Author Metric. ")
 
@@ -481,7 +481,7 @@ def dis_between_authors(author1, author2):
     :return:
         a float.
     """
-    metric = Author.AMetrictype
+    metric = Author.AMetricType
     if metric == AuthorMetric.CentroidDis:
         return author2.distance_to(author1.get_center)
     temp = [author1.distance_to(Author2Works) for Author2Works in author2.get_matrices()]
