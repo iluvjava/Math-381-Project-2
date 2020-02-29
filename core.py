@@ -227,6 +227,7 @@ class AuthorMetric(enum.Enum):
 
     AverageDis = 2 # Taking the average distance of the given transition matrix with respect to
     # All the matrices of the author.
+    # TODO: SOMETHING IS WRONG HERE.
 
     CentroidDis = 3 # This metric take the matrix norm on the difference of 2 centroids of the author.
 
