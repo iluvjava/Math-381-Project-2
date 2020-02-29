@@ -14,7 +14,7 @@ import math
 from os import listdir
 from os.path import isfile
 
-__all__ = ["Author", "dis_between_authors", "get_tm55", "get_tm27", "get_2ndtm",
+__all__ = ["Author", "dis_between_authors", "get_tm27", "get_2ndtm",
            "CHARLES_DICKENS",
            "MARK_TWAIN", "CentroidOption", "MatrixMetric", "AuthorMetric"]
 
@@ -28,44 +28,30 @@ np.set_printoptions(threshold=10, precision=2, linewidth=1000)
 def process_text(filepath: str):
     """
     Function reads lines from the file, with the new line character stripped off from
-    the line
-
+    the line.
     :param filepath:
         The file path.
     :return:
-    A array of string. Each string is a line in the file.
+        A array of string. Each string is a line in the file.
     """
     with open(filepath, 'r', encoding=ENCODING) as f:
         return [l.strip() for l in f.readlines()]
 
 
-def trim_line(s: str):
-    """
-        This function trims off all the punctuations in the line and collapse the
-        spaces in the text.
-        * The return string is going to contains only alphabetical letters
-        with single space between it.
-    :param s:
-        Single line of string, should be trimmed
-    :return:
-        A new line of string that is trimmed.
-    """
-    s = s.strip()
-    characters = ascii_letters + " '"
-    NonAlphabet = '''!()-[]{};:"\,<>./?@#$%^&*_~=0123456789+`|'''
-    Astrophe = "'"
+
+
+def trim_line(s:str, IgnoreCapitalzedWord=False):
+    if IgnoreCapitalzedWord:
+        s = ' '.join([word for word in s.split() if word[0].islower()])
     Res = ""
-    for char in s:
-        if char in NonAlphabet:
-            Res = Res + ' '
-        elif char == Astrophe:
-            continue  # Strip off apostrophe.
-        else:
-            Res += char if char in characters else ""
-    return re.sub(' +', ' ', Res.lower())
+    for c in s:
+        if c == "\'":
+            continue
+        Res += c if c in ascii_letters else (" " if len(Res) >= 1 and Res[-1] != ' ' else "")
+    return Res.lower()
 
 
-def get_tm27(lines: List[str]):
+def get_tm27(lines: List[str], ignoreSpecialNoun=False):
     """
         Function takes the path of a file and returns the transition
         matrix based on the 26 letters in the alphabet,
@@ -80,7 +66,7 @@ def get_tm27(lines: List[str]):
     matrix = np.zeros((27, 27))
     characters = ascii_letters[0:26] + " "
     for line in lines:
-        trimmed_line = trim_line(line)
+        trimmed_line = trim_line(line, IgnoreCapitalzedWord=ignoreSpecialNoun)
         line = list(trimmed_line)
         for i, c2 in enumerate(line[1:]):
             c1 = line[i]
@@ -108,6 +94,7 @@ def get_tm55(lines: List[str]):
     :return:
         np matrix.
     """
+    raise RuntimeError("Deprecated function you should not use it.")
     characters = ascii_letters + " '"
     n = len(characters)
     Characters = characters
@@ -129,7 +116,7 @@ def get_tm55(lines: List[str]):
     return npmatrix
 
 
-def get_2ndtm(lines: List[str]):
+def get_2ndtm(lines: List[str], skipSpecialNoun=False):
     """
         Given the content of the file separated by lines, this function will return the
         26^2 by 26^2 transition matrix.
@@ -149,7 +136,7 @@ def get_2ndtm(lines: List[str]):
         return Alphabet.find(letter)
 
     for Line in lines:
-        Line = trim_line(Line)
+        Line = trim_line(Line, IgnoreCapitalzedWord=skipSpecialNoun)
         for I in range(len(Line) - 3):
             i = s(Line[I]) * l + s(Line[I + 1])
             j = s(Line[I + 2]) * l + s(Line[I + 3])
@@ -160,40 +147,6 @@ def get_2ndtm(lines: List[str]):
         if s > 0:
             npmatrix[i] /= s
     return npmatrix
-
-
-def get_3ndtm_nonsquare(lines: List[str]):
-    """
-       Non square 3rd order matrix.
-    :param lines:
-        The content of the file represented in the an array of lines.
-    :return:
-        The np matrix.
-    """
-    Alphabet = ascii_letters[0:26] + " "
-    l = len(Alphabet)
-    n = l ** 2
-    npmatrix = np.zeros((l ** 3, l))
-
-    def s(letter):
-        return Alphabet.find(letter)
-
-    for Line in lines:
-        Line = trim_line(Line)
-        for I in range(len(Line) - 3):
-            i = s(Line[I]) * l ** 2 + s(Line[I + 1]) * l + s(Line[I + 2])
-            j = s(Line[I + 3])
-            npmatrix[i, j] += 1
-
-    for i in range(npmatrix.shape[0]):
-        s = np.sum(npmatrix[i])
-        if s > 0:
-            npmatrix[i] /= s
-    return npmatrix
-
-
-def get_3rdtm(lines: List[str]):
-    raise RuntimeError("Not yet Implemented. ")
 
 
 class CentroidOption(enum.Enum):
@@ -274,7 +227,7 @@ class Author:
     MMetricType = MatrixMetric.TwoNorm
     AMetricType = AuthorMetric.CentroidDis
 
-    def __init__(self, dir: str, matrixfunction: Callable = get_tm27):
+    def __init__(self, dir: str, matrixfunction: Callable = get_tm27, IgoreSpecialNoun=False):
         """
             Create an instance of an author by specifying:
                 * A directory containing all text files written by the author.
@@ -290,7 +243,7 @@ class Author:
                 FilePathList.append(filepath)
 
         assert len(FilePathList) > 0, f"There is no file under the directory: {dir}"
-
+        self.__IgnoreSpecialNoun=IgoreSpecialNoun
         FilePath2Lines = {}
         for f in FilePathList:
             FilePath2Lines[f] = process_text(f)
@@ -332,7 +285,8 @@ class Author:
         if self.__NpMatrices is not None:
             res = self.__NpMatrices
         else:
-            self.__NpMatrices = [self.__TMFunction(lines) for lines in self.list_of_works_content()]
+            self.__NpMatrices = [self.__TMFunction(lines, self.__IgnoreSpecialNoun)\
+                                 for lines in self.list_of_works_content()]
             res = self.__NpMatrices
         return res
 
@@ -350,7 +304,7 @@ class Author:
         alllines = []
         for writing in self.list_of_works_content():
             alllines += writing
-        self.__AggregateMatrix = self.__TMFunction(alllines)
+        self.__AggregateMatrix = self.__TMFunction(alllines, self.__IgnoreSpecialNoun)
         return self.__AggregateMatrix
 
     def __average_matrix(self):
@@ -491,19 +445,6 @@ def dis_between_authors(author1, author2):
     if metric == AuthorMetric.MinimumDis:
         return min(temp)
     raise RuntimeError("Invalid AuthorMetricOption")
-
-
-def visualize_author(theauthor, theplot):
-    """
-        Function will use matplot lib to plot out the transition matrix of the author.
-        It will show the plot, and it will also save the image into the root directory.
-        *
-    :param theauthor:
-        An instance of the class Author.
-    :return:
-        An instance of matplot.
-    """
-    pass # TODO: IMPLEMENT THIS SHIT.
 
 
 def main():

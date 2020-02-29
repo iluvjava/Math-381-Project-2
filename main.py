@@ -13,7 +13,8 @@ class Authors:
     def __init__(self, MatrixGeneratingFunction: Callable,
                  CentroidType:Type[CentroidOption]=CentroidOption.AggregateMatrix,
                  Mmtric:Type[MatrixMetric]=MatrixMetric.TwoNorm,
-                 Ametric:Type[AuthorMetric]=AuthorMetric.CentroidDis):
+                 Ametric:Type[AuthorMetric]=AuthorMetric.CentroidDis,
+                 IgnoreSpecialNoun:bool=False):
         AuthorsFolders = []
         for d in listdir(AUTHORS_FOLDER):
             d = AUTHORS_FOLDER + "/" + d
@@ -24,8 +25,9 @@ class Authors:
         Author.CentroidType = CentroidType
         Author.MMetricType = Mmtric
         Author.AMetricType = Ametric
+        self.__IgnoreSpecialNoun = IgnoreSpecialNoun
         for AuthorDir in AuthorsFolders:
-            self.__AuthorList.append(Author(AuthorDir, MatrixGeneratingFunction))
+            self.__AuthorList.append(Author(AuthorDir, MatrixGeneratingFunction, IgoreSpecialNoun=IgnoreSpecialNoun))
         self.__AuthorNameList = [A.name() for A in self.__AuthorList]
 
     def change_mmetric(self, m: Type[MatrixMetric]):
@@ -51,19 +53,27 @@ class Authors:
             s += "\n"
         s += f"The matrix metric is: {Author.MMetricType}\n"
         s += f"The Author metric is: {Author.AMetricType}\n"
+        s += "All special nouns are IGNORED\n" if self.__IgnoreSpecialNoun else ""
         s += "======================================================"
         return s
 
 
 if __name__ == "__main__":
 
-    for f in [get_2ndtm, get_tm27, get_tm55]:
-        theinstance = Authors(f)
+    for f in [get_2ndtm, get_tm27]:
+        theinstance = Authors(f,IgnoreSpecialNoun=True)
         for am in AuthorMetric:
             for mmt in MatrixMetric:
                 theinstance.change_mmetric(mmt)
                 theinstance.change_amatric(am)
                 print(theinstance)
+        for f in [get_2ndtm, get_tm27]:
+            theinstance = Authors(f, IgnoreSpecialNoun=False)
+            for am in AuthorMetric:
+                for mmt in MatrixMetric:
+                    theinstance.change_mmetric(mmt)
+                    theinstance.change_amatric(am)
+                    print(theinstance)
     s =\
 """
     ================================
