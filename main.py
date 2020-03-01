@@ -92,9 +92,13 @@ class Authors:
             Res += "  " + " "*I*(MaxNameLen + 1) + "".join(EachRow) + "\n"
 
         # Adding some clouds information for each of the authors:
-        for EachAuthor in self.__AuthorList:
-            Info1, Info2 = EachAuthor.author_cloud()
-            Res += f"Author: {EachAuthor.name()}; Cloud Standard Deviation: {Info1[1]}\n"
+        # for EachAuthor in self.__AuthorList:
+        #     Info1, Info2 = EachAuthor.author_cloud()
+        #     Res += f"Author: {EachAuthor.name()}; Cloud Standard Deviation: {Info1[1]}\n"
+        # Conveniently add all the authors information.
+
+        Res += "".join(str(Author) for Author in self.__AuthorList)
+        Res += "="*50 + "\n"
         return Res
 
 
@@ -140,7 +144,6 @@ def print_experiment(
                 Mmtric=MatrixMetric,
                 Ametric=AuthorMetric))
     return
-
 
 
 def brieftest():
