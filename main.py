@@ -30,11 +30,31 @@ class Authors:
             self.__AuthorList.append(Author(AuthorDir, MatrixGeneratingFunction, IgoreSpecialNoun=IgnoreSpecialNoun))
         self.__AuthorNameList = [A.name() for A in self.__AuthorList]
 
+    def prepare(self, MatrixGeneratingFxn, IgnoreSpecialNoun):
+        """
+            This function set up all the authors in the folders.
+            * It prepares for analysis.
+        :param MatrixGeneratingFxn:
+            This is the matrix function you want to use
+            to generate the transition matrices of the authors.
+        :param IgnoreSpecialNoun:
+            This is set to true if you want to remove
+            all special nouns in the text.
+        :return:
+            None
+        """
+        pass # TODO: Implements this shit.
+
     def change_mmetric(self, m: Type[MatrixMetric]):
         Author.MMetricType = m
 
     def change_amatric(self, m: Type[AuthorMetric]):
         Author.AMetricType = m
+
+    def produce_results(self):
+        #TODO: Implements this shit
+        pass
+
 
     def __repr__(self):
         s = ""
@@ -67,13 +87,14 @@ if __name__ == "__main__":
                 theinstance.change_mmetric(mmt)
                 theinstance.change_amatric(am)
                 print(theinstance)
-        for f in [get_2ndtm, get_tm27]:
-            theinstance = Authors(f, IgnoreSpecialNoun=False)
-            for am in AuthorMetric:
-                for mmt in MatrixMetric:
-                    theinstance.change_mmetric(mmt)
-                    theinstance.change_amatric(am)
-                    print(theinstance)
+
+    for f in [get_2ndtm, get_tm27]:
+        theinstance = Authors(f, IgnoreSpecialNoun=False)
+        for am in AuthorMetric:
+            for mmt in MatrixMetric:
+                theinstance.change_mmetric(mmt)
+                theinstance.change_amatric(am)
+                print(theinstance)
     s =\
 """
     ================================

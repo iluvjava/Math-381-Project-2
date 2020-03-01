@@ -38,8 +38,6 @@ def process_text(filepath: str):
         return [l.strip() for l in f.readlines()]
 
 
-
-
 def trim_line(s:str, IgnoreCapitalzedWord=False):
     if IgnoreCapitalzedWord:
         s = ' '.join([word for word in s.split() if word[0].islower()])
