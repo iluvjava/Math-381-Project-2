@@ -365,7 +365,7 @@ class Author:
             author's works to a distance represented in a float value.
         :return:
             2 items:
-            1. [<average distance>, <standard deviation>]
+            1. [<average distance>, <standard deviation>], distancelist
             2. A map, string to float.
         """
         DistanceList = self.work_distances()
