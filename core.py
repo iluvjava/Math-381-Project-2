@@ -467,18 +467,18 @@ if __name__ == '__main__':
         plt.savefig(filedir)
         plt.clf()
 
+    def save_nparray(m, name):
+        np.savetxt(X=m, fname=name)
+
     Mark27 = Author(MARK_TWAIN, get_tm27)
     Mark2nd = Author(MARK_TWAIN, get_2ndtm)
     Mark27_ignore = Author(MARK_TWAIN, get_tm27, IgnoreSpecialNoun=True)
     Mark2nd_ignore = Author(MARK_TWAIN, get_2ndtm, IgnoreSpecialNoun=True)
-    ignore = [False, False, True, True]
     filenames = ["Mark27", "Mark2nd", "Mark27_ignore", "Mark2nd_ignore"]
-
     for Author, Filename in zip([Mark27, Mark2nd, Mark27_ignore, Mark2nd_ignore], filenames):
-        for WorkName, Matrix, IgnoreCase, Idx in \
-                zip(Author.list_of_works(), Author.get_matrices(), ignore, range(len(ignore))):
+        for WorkName, Matrix in zip(Author.list_of_works(), Author.get_matrices()):
             if "Huckle" in WorkName:
-                plot_matrix_savefig(Matrix, f"{Filename}{Idx}, {IgnoreCase}")
+                save_nparray(Matrix, Filename)
 
 
 
