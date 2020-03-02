@@ -50,7 +50,7 @@ class Authors:
         self.__IgnoreSpecialNoun = IgnoreSpecialNoun
         self.__GeneratingFunction = MatrixGeneratingFxn
         for AuthorDir in AuthorsFolders:
-            self.__AuthorList.append(Author(AuthorDir, MatrixGeneratingFxn, IgoreSpecialNoun=IgnoreSpecialNoun))
+            self.__AuthorList.append(Author(AuthorDir, MatrixGeneratingFxn, IgnoreSpecialNoun=IgnoreSpecialNoun))
 
     def produce_results(self,
                 CentroidType:Type[CentroidOption]=CentroidOption.AggregateMatrix,

@@ -22,6 +22,8 @@ __all__ = ["Author", "dis_between_authors", "get_tm27", "get_2ndtm",
 CHARLES_DICKENS = "data/Charles Dickens"
 MARK_TWAIN = "data/Mark Twain"
 ENCODING = "utf8"
+PLOT = "plot"
+
 np.set_printoptions(threshold=10, precision=2, linewidth=1000)
 
 
@@ -225,7 +227,7 @@ class Author:
     MMetricType = MatrixMetric.TwoNorm
     AMetricType = AuthorMetric.CentroidDis
 
-    def __init__(self, dir: str, matrixfunction: Callable = get_tm27, IgoreSpecialNoun=False):
+    def __init__(self, dir: str, matrixfunction: Callable = get_tm27, IgnoreSpecialNoun=False):
         """
             Create an instance of an author by specifying:
                 * A directory containing all text files written by the author.
@@ -241,7 +243,7 @@ class Author:
                 FilePathList.append(filepath)
 
         assert len(FilePathList) > 0, f"There is no file under the directory: {dir}"
-        self.__IgnoreSpecialNoun=IgoreSpecialNoun
+        self.__IgnoreSpecialNoun=IgnoreSpecialNoun
         FilePath2Lines = {}
         for f in FilePathList:
             FilePath2Lines[f] = process_text(f)
@@ -405,6 +407,10 @@ class Author:
             return sum(temp)/len(temp)
         raise("Invalid Author Metric. ")
 
+    def cross_dis(self):
+        # TODO: IMPLEMENT THIS SHIT
+        pass
+
     def __repr__(self):
         s = "-------------------AUTHOR INFO---------------------\n"
         s += f"Author's Name: {self.__AuthorName} \n"
@@ -450,5 +456,31 @@ def main():
 
 
 if __name__ == '__main__':
+    """
+        Adventures of Huckleberry Finn: tm27, 2ndtm, and their centroid. 
+    """
+    print("Producing and print...")
+
+    def plot_matrix_savefig(m, filedir:str):
+        plt.imshow(m)
+        plt.colorbar()
+        plt.savefig(filedir)
+        plt.clf()
+
+    Mark27 = Author(MARK_TWAIN, get_tm27)
+    Mark2nd = Author(MARK_TWAIN, get_2ndtm)
+    Mark27_ignore = Author(MARK_TWAIN, get_tm27, IgnoreSpecialNoun=True)
+    Mark2nd_ignore = Author(MARK_TWAIN, get_2ndtm, IgnoreSpecialNoun=True)
+    ignore = [False, False, True, True]
+    filenames = ["Mark27", "Mark2nd", "Mark27_ignore", "Mark2nd_ignore"]
+
+    for Author, Filename in zip([Mark27, Mark2nd, Mark27_ignore, Mark2nd_ignore], filenames):
+        for WorkName, Matrix, IgnoreCase, Idx in \
+                zip(Author.list_of_works(), Author.get_matrices(), ignore, range(len(ignore))):
+            if "Huckle" in WorkName:
+                plot_matrix_savefig(Matrix, f"{Filename}{Idx}, {IgnoreCase}")
+
+
+
 
     pass
