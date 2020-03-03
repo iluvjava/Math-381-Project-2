@@ -356,7 +356,7 @@ class Author:
         DistanceMap = {}
         Center = self.get_center()
         for Writing, Matrix in zip(self.list_of_works(), self.get_matrices()):
-            DistanceMap[Writing] = dis(Matrix, Center, Metric=Author.MMetricType, WeightVec1=None, WeightVec2=None)
+            DistanceMap[Writing] = dis(Matrix, Center, Metric=Author.MMetricType)
         return DistanceMap
 
     def author_cloud(self):
@@ -399,7 +399,7 @@ class Author:
         """
         centroid = self.get_center()
         if Author.AMetricType == AuthorMetric.CentroidDis:
-            return dis(centroid, m2, Metric=Author.MMetricType, WeightVec1=None, WeightVec2=None)
+            return dis(centroid, m2, Metric=Author.MMetricType)
         temp = [dis(m1, m2, Metric=Author.MMetricType) for m1 in self.get_matrices()]
         if Author.AMetricType == AuthorMetric.MinimumDis:
             return min(temp)
@@ -424,7 +424,7 @@ class Author:
         """
         def sd_avg(Arr):
             ArrSquared = list(map(lambda x: x**2, Arr))
-            return math.sqrt(sum(ArrSquared)/len(ArrSquared) - (sum(Arr)/len(Arr))**2), sum(Arr)/len(Arr)
+            return sum(Arr)/len(Arr), math.sqrt(sum(ArrSquared)/len(ArrSquared) - (sum(Arr)/len(Arr))**2)
 
         def cross_compare(Matrices, WorkList, Centroid):
             Distances = [dis(M, Centroid, Metric=Author.MMetricType) for M in Matrices]
@@ -432,9 +432,9 @@ class Author:
             Avg, SD = sd_avg(Distances)
             return [DistancesDict, Avg, SD]
 
-        ThisCompareToThat = cross_compare(self.get_matrices(), self.list_of_works(), self.get_center())
+        ThisCompareToThat = cross_compare(self.get_matrices(), self.list_of_works(), AnotherAuthor.get_center())
         ThatCompareToThis = cross_compare(AnotherAuthor.get_matrices(), AnotherAuthor.list_of_works(), \
-                                          AnotherAuthor.get_center())
+                                          self.get_center())
         return ThisCompareToThat, ThatCompareToThis
 
 

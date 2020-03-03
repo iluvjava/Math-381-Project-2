@@ -193,6 +193,5 @@ if __name__ == "__main__":
     #     CentroidType=CentroidOption.AggregateMatrix,
     #     MatrixMetric=MatrixMetric.TwoNorm,
     #     AuthorMetric=AuthorMetric.CentroidDis)
-    print(
-        print_cross_compare_experiement("data/Charles Dickens", "data/Mark Twain"))
+    print_cross_compare_experiement("data/Charles Dickens", "data/Mark Twain")
 
