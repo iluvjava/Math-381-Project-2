@@ -423,8 +423,8 @@ class Author:
         [<Distance Dict>, Avg_distance, Sd],
         """
         def sd_avg(Arr):
-            ArrSquared = map(lambda x: x**2, Arr)
-            return math.sqrt(sum(ArrSquared)/len(ArrSquared), (sum(Arr)/len(Arr))**2), sum(Arr)/len(Arr)
+            ArrSquared = list(map(lambda x: x**2, Arr))
+            return math.sqrt(sum(ArrSquared)/len(ArrSquared) - (sum(Arr)/len(Arr))**2), sum(Arr)/len(Arr)
 
         def cross_compare(Matrices, WorkList, Centroid):
             Distances = [dis(M, Centroid, Metric=Author.MMetricType) for M in Matrices]

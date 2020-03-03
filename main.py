@@ -91,12 +91,6 @@ class Authors:
             EachRow = [f"{{:<{MaxNameLen + 1}.4f}}".format(Value) for Value in EachRow]
             Res += "  " + " "*I*(MaxNameLen + 1) + "".join(EachRow) + "\n"
 
-        # Adding some clouds information for each of the authors:
-        # for EachAuthor in self.__AuthorList:
-        #     Info1, Info2 = EachAuthor.author_cloud()
-        #     Res += f"Author: {EachAuthor.name()}; Cloud Standard Deviation: {Info1[1]}\n"
-        # Conveniently add all the authors information.
-
         Res += "".join(str(Author) for Author in self.__AuthorList)
         Res += "="*50 + "\n"
         return Res
@@ -145,11 +139,15 @@ def print_experiment(
                 Ametric=AuthorMetric))
     return
 
-def print_cross_compare_experiement(Author1Directory:str, Author2Directory: str):
+
+def print_cross_compare_experiement(Author1Directory:str,
+                                    Author2Directory:str,
+                                    MatrixGeneratingFxn: Callable = get_tm27,
+                                    IgnoreSpecialNouns: bool = True,
+                                    MatrixMetric: MatrixMetric = MatrixMetric.TwoNorm):
     """
         This function takes in 2 instances of author and cross compare then and then print all
         the report on each of the individual works, average distances to the opposite centroid.
-
     :param Author1Directory:
         A string representing the folder that contains all the text files of the author
     :param Author2Directory:
@@ -157,41 +155,44 @@ def print_cross_compare_experiement(Author1Directory:str, Author2Directory: str)
     :return:
         None
     """
+    assert Author2Directory != Author1Directory, "You should not cross compare the same author. "
 
+    Author.MMetricType = MatrixMetric
 
-    # TODO: CIMPLEMENT THIS SHIT.
+    Author_A, Author_B= Author(Author1Directory, MatrixGeneratingFxn, IgnoreSpecialNouns), \
+                      Author(Author2Directory, MatrixGeneratingFxn, IgnoreSpecialNouns)
+    Author1, Author2 = Author_A.cross_distance_stats(Author_B)
+    def print_author(A, B):
+        for K, V in A[0].items():
+            print(f"{K}: {V}")
+        print("-"*40)
+        print(f"The average distance is: {A[1]}, The Standard Deviation is: {A[2]}")
+
+    print("Here is a list of distances when we compare each individuals works of "
+         f"{Author_A.name()} to {Author_B.name()}'s centroid")
+    print("+"*40)
+    print_author(Author1, Author2)
+    print("Here is a list of distances when we compare each individuals works of "
+          f"{Author_B.name()} to {Author_A.name()}'s centroid")
+    print("+"*40)
+    print_author(Author2, Author1)
+    print("="*40)
+    print("Here is a list the cloud info for both author: ")
+    print("="*40)
+    print(Author_A)
+    print(Author_B)
+    return
 
 
 
 
 if __name__ == "__main__":
 
-    print_experiment(MatrixGeneratingFxn=get_tm27,
-        IgnoreSpecialNouns=True,
-        CentroidType=CentroidOption.AggregateMatrix,
-        MatrixMetric=MatrixMetric.TwoNorm,
-        AuthorMetric=AuthorMetric.CentroidDis)
+    # print_experiment(MatrixGeneratingFxn=get_tm27,
+    #     IgnoreSpecialNouns=True,
+    #     CentroidType=CentroidOption.AggregateMatrix,
+    #     MatrixMetric=MatrixMetric.TwoNorm,
+    #     AuthorMetric=AuthorMetric.CentroidDis)
+    print(
+        print_cross_compare_experiement("data/Charles Dickens", "data/Mark Twain"))
 
-    s =\
-"""
-    ================================
-    | How to interpret the output? |
-    ================================
-    Each authors cloud information is printed in blocks, with 
-    the option printed. 
-    
-    All the author together has information on distances between 
-    all pairs of author, for example, if the following is printed: 
-    -------------------------------------------------------------
-    | Charles Dickens | Mark Twain | Mark Twain's Lost Text |
-    3.9300    4.3990
-    3.3338
-    -------------------------------------------------------------
-    It means that, the distance between "Charles Dickens" and "Mark Twain" is 3.9300,
-    the distance between "Charles Dickens" and "Mark Twain's Lost Text" is 4.3990;
-    and the distance between "Mark Twain" and "Mark Twain's Lost text" is 3.3338.
-    
-    The list can be longer, each i th row is basically the distance from work 
-    i to i+1, i+2 all the way to the end of the list of authors.  
-"""
-    print(s)
