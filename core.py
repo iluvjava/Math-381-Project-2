@@ -418,8 +418,20 @@ class Author:
         :param AnotherAuthor:
             An in stance of another author that is not this author.
         :return:
-
+        - 3 separate parameters are returned:
+        1.
+            [
+                {str: float, str: float, ...} name of THIS author's work and its distance to the centroid of the
+                THAT author.
+                ,
+                {str: float, str: float ... } name of THAT author's work and its distance to the centroid of THIS
+                author.
+            ]
+        2. (avarage distance, avarage distance)
+        3. (standar deviations, statndard deviations)
         """
+        ThisAuthorMatrices = []
+        ThatAuthorMatrices = []
 
         pass
 
