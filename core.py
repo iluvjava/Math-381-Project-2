@@ -407,8 +407,20 @@ class Author:
             return sum(temp)/len(temp)
         raise("Invalid Author Metric. ")
 
-    def cross_dis(self):
-        # TODO: IMPLEMENT THIS SHIT
+    def cross_distance_stats(self, AnotherAuthor):
+        """
+            * This function will compare each of the works of THIS authoer
+            to another author using the matrix metric.
+            * This function will return detailed statistics about the
+            distance for all the works from this author to that author, and THAT
+            author to THIS author.
+
+        :param AnotherAuthor:
+            An in stance of another author that is not this author.
+        :return:
+
+        """
+
         pass
 
     def __repr__(self):
@@ -425,6 +437,7 @@ class Author:
         s += f"Centroid Matrix is: {Author.CentroidType}\n"
         s += f"Function used to generate transition matrix: {self.__TMFunction.__name__}\n"
         return s
+
 
 
 def dis_between_authors(author1, author2):
@@ -452,16 +465,12 @@ def dis_between_authors(author1, author2):
 
 
 def main():
-    pass
-
-
-if __name__ == '__main__':
     """
-        Adventures of Huckleberry Finn: tm27, 2ndtm, and their centroid. 
-    """
+           Adventures of Huckleberry Finn: tm27, 2ndtm, and their centroid.
+       """
     print("Producing and print...")
 
-    def plot_matrix_savefig(m, filedir:str):
+    def plot_matrix_savefig(m, filedir: str):
         plt.imshow(m)
         plt.colorbar()
         plt.savefig(filedir)
@@ -469,6 +478,7 @@ if __name__ == '__main__':
 
     def save_nparray(m, name):
         np.savetxt(X=m, fname=name)
+    global Author
 
     Mark27 = Author(MARK_TWAIN, get_tm27)
     Mark2nd = Author(MARK_TWAIN, get_2ndtm)
@@ -480,9 +490,13 @@ if __name__ == '__main__':
         for WorkName, Matrix in zip(Author.list_of_works(), Author.get_matrices()):
             if "Huckle" in WorkName:
                 save_nparray(Matrix, Filename + " Huckle.txt")
-        save_nparray(Author.get_center(), " Centroid.txt")
+        save_nparray(Author.get_center(), f"{Filename} Centroid.txt")
+
+    print("Ok, we are going to save some centroid for both of the authors now: ")
 
 
 
 
+if __name__ == '__main__':
+    main()
     pass
