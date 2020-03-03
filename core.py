@@ -475,10 +475,12 @@ if __name__ == '__main__':
     Mark27_ignore = Author(MARK_TWAIN, get_tm27, IgnoreSpecialNoun=True)
     Mark2nd_ignore = Author(MARK_TWAIN, get_2ndtm, IgnoreSpecialNoun=True)
     filenames = ["Mark27", "Mark2nd", "Mark27_ignore", "Mark2nd_ignore"]
-    for Author, Filename in zip([Mark27, Mark2nd, Mark27_ignore, Mark2nd_ignore], filenames):
+    authors = [Mark27, Mark2nd, Mark27_ignore, Mark2nd_ignore]
+    for Author, Filename in zip(authors, filenames):
         for WorkName, Matrix in zip(Author.list_of_works(), Author.get_matrices()):
             if "Huckle" in WorkName:
-                save_nparray(Matrix, Filename)
+                save_nparray(Matrix, Filename + " Huckle.txt")
+        save_nparray(Author.get_center(), " Centroid.txt")
 
 
 
