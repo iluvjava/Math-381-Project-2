@@ -145,11 +145,22 @@ def print_experiment(
                 Ametric=AuthorMetric))
     return
 
+def print_cross_compare_experiement(Author1Directory:str, Author2Directory: str):
+    """
+        This function takes in 2 instances of author and cross compare then and then print all
+        the report on each of the individual works, average distances to the opposite centroid.
 
-def brieftest():
-    TestInstance = Authors(MatrixGeneratingFunction=get_tm27)
-    PrintedResults = TestInstance.produce_results()
-    print(PrintedResults)
+    :param Author1Directory:
+        A string representing the folder that contains all the text files of the author
+    :param Author2Directory:
+        A string, representing another author.
+    :return:
+        None
+    """
+
+
+    # TODO: CIMPLEMENT THIS SHIT.
+
 
 
 

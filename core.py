@@ -187,7 +187,7 @@ class AuthorMetric(enum.Enum):
 
 MM = Type[MatrixMetric]
 CO = Type[CentroidOption]
-def dis(Matrix1, Matrix2, Metric:MM, WeightVec1 = None, WeightVec2 = None):
+def dis(Matrix1, Matrix2, Metric:MM):
     """
         This function returns the distance between 2 matrices, given
         the type of Metric space and the weights.
@@ -409,7 +409,7 @@ class Author:
 
     def cross_distance_stats(self, AnotherAuthor):
         """
-            * This function will compare each of the works of THIS authoer
+            * This function will compare each of the works of THIS author
             to another author using the matrix metric.
             * This function will return detailed statistics about the
             distance for all the works from this author to that author, and THAT
@@ -418,22 +418,25 @@ class Author:
         :param AnotherAuthor:
             An in stance of another author that is not this author.
         :return:
-        - 3 separate parameters are returned:
-        1.
-            [
-                {str: float, str: float, ...} name of THIS author's work and its distance to the centroid of the
-                THAT author.
-                ,
-                {str: float, str: float ... } name of THAT author's work and its distance to the centroid of THIS
-                author.
-            ]
-        2. (avarage distance, avarage distance)
-        3. (standar deviations, statndard deviations)
+        - w lists are returned, each is a packed information about all information.
+        [<Distance Dict>, Avg_distance, SD],
+        [<Distance Dict>, Avg_distance, Sd],
         """
-        ThisAuthorMatrices = []
-        ThatAuthorMatrices = []
+        def sd_avg(Arr):
+            ArrSquared = map(lambda x: x**2, Arr)
+            return math.sqrt(sum(ArrSquared)/len(ArrSquared), (sum(Arr)/len(Arr))**2), sum(Arr)/len(Arr)
 
-        pass
+        def cross_compare(Matrices, WorkList, Centroid):
+            Distances = [dis(M, Centroid, Metric=Author.MMetricType) for M in Matrices]
+            DistancesDict = dict(zip(WorkList, Distances))
+            Avg, SD = sd_avg(Distances)
+            return [DistancesDict, Avg, SD]
+
+        ThisCompareToThat = cross_compare(self.get_matrices(), self.list_of_works(), self.get_center())
+        ThatCompareToThis = cross_compare(AnotherAuthor.get_matrices(), AnotherAuthor.list_of_works(), \
+                                          AnotherAuthor.get_center())
+        return ThisCompareToThat, ThatCompareToThis
+
 
     def __repr__(self):
         s = "-------------------AUTHOR INFO---------------------\n"
