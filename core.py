@@ -506,7 +506,6 @@ def main():
             if "Huckle" in WorkName:
                 save_nparray(Matrix, Filename + " Huckle.txt")
         save_nparray(Author.get_center(), f"{Filename} Centroid.txt")
-
     print("Ok, we are going to save some centroid for both of the authors now: ")
 
 

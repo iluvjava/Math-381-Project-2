@@ -185,7 +185,6 @@ def print_cross_compare_experiement(Author1Directory:str,
 
 
 if __name__ == "__main__":
-
     # print_experiment(MatrixGeneratingFxn=get_tm27,
     #     IgnoreSpecialNouns=True,
     #     CentroidType=CentroidOption.AggregateMatrix,
