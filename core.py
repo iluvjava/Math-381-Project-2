@@ -510,6 +510,22 @@ def main():
 
 
 
+def save_matrices_forall_data():
+    """
+        This function will save all the works of the authors's transition
+        matrices as a text files, this is for the concerns of correctness of
+        the codes, so that people can just take all the text file and confirm the
+        correctness by themselves.
+    :return:
+        None
+    """
+    global Author
+    def save_listof_matrices():
+        pass
+
+
+    pass # TODO: IMPLEMENT THIS SHIT
+
 
 if __name__ == '__main__':
     main()
