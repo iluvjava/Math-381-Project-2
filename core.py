@@ -14,9 +14,9 @@ import math
 from os import listdir
 from os.path import isfile
 
-__all__ = ["Author", "dis_between_authors", "get_tm27", "get_2ndtm","get_2ndlogarithm", 
+__all__ = ["Author", "dis_between_authors", "get_tm27", "get_2ndtm","get_2ndlogarithm",
            "CHARLES_DICKENS",
-           "MARK_TWAIN", "CentroidOption", "MatrixMetric", "AuthorMetric"]
+           "MARK_TWAIN", "CentroidOption", "MatrixMetric", "AuthorMetric", "dis"]
 
 # A list of authors' directory:
 CHARLES_DICKENS = "data/Charles Dickens"
@@ -114,6 +114,7 @@ def get_2ndtm(lines: List[str], skipSpecialNoun=False):
             npmatrix[i] /= s
     return npmatrix
 
+
 def get_2ndlogarithm(lines: List[str], skipSpecialNoun=False):
     """
         Takes the logarithm after counting the frequency,
@@ -182,7 +183,7 @@ class AuthorMetric(enum.Enum):
 
     AverageDis = 2 # Taking the average distance of the given transition matrix with respect to
     # All the matrices of the author.
-    # TODO: SOMETHING IS WRONG HERE.
+
 
     CentroidDis = 3 # This metric take the matrix norm on the difference of 2 centroids of the author.
 
@@ -272,6 +273,14 @@ class Author:
 
     def list_of_works_content(self):
         return list(self.__FilePathToLines.values())
+
+    def work_matrix_dict(self):
+        """
+            Give a dictionary that maps the name of the works to the
+            transition matrices.
+        :return:
+        """
+        return dict(zip(self.list_of_works(), self.get_matrices()))
 
     def name(self):
         return self.__AuthorName
@@ -510,7 +519,6 @@ def main():
     print("Ok, we are going to save some centroid for both of the authors now: ")
 
 
-
 def save_matrices_forall_data():
     """
         This function will save all the works of the authors's transition
@@ -521,13 +529,36 @@ def save_matrices_forall_data():
         None
     """
     global Author
-    def save_listof_matrices():
-        pass
-    def gernate_all_authors():
+    def save(NpMatrix, dir:str, filename:str):
+
+        np.savetxt(fname=filename, X=NpMatrix)
+        return
+
+    def generate_all_authors():
+        AllMatrices = [get_tm27, get_2ndtm, get_2ndlogarithm]
+        FileLocations = [CHARLES_DICKENS, MARK_TWAIN]
+        ListofAuthors = []
+        for L in FileLocations:
+            for G in AllMatrices:
+                ListofAuthors.append(
+                    Author(dir=L,
+                            matrixfunction=G,
+                            IgnoreSpecialNoun=True))
+                ListofAuthors.append(
+                    Author(dir=L,
+                            matrixfunction=G,
+                            IgnoreSpecialNoun=True))
+
+        return ListofAuthors
+
+    # TODO: FINISH THIS SHIT.
+    for Aut in generate_all_authors():
+        AuthorName = Aut.name()
+        for Work, Matrix in zip(Aut.list_of_works(), Aut.get_matrices()):
+            save(Matrix, "")
         pass
 
-
-    pass # TODO: IMPLEMENT THIS SHIT
+    pass
 
 
 if __name__ == '__main__':
