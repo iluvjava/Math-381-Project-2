@@ -14,9 +14,9 @@ import math
 from os import listdir
 from os.path import isfile
 
-__all__ = ["Author", "dis_between_authors", "get_tm27", "get_2ndtm",
+__all__ = ["Author", "dis_between_authors", "get_tm27", "get_2ndtm","get_2ndlogarithm",
            "CHARLES_DICKENS",
-           "MARK_TWAIN", "CentroidOption", "MatrixMetric", "AuthorMetric"]
+           "MARK_TWAIN", "CentroidOption", "MatrixMetric", "AuthorMetric", "dis"]
 
 # A list of authors' directory:
 CHARLES_DICKENS = "data/Charles Dickens"
@@ -82,40 +82,6 @@ def get_tm27(lines: List[str], ignoreSpecialNoun=False):
     return matrix
 
 
-def get_tm55(lines: List[str]):
-    """
-        This function creates a matrix of 55 states given the raw inputs from the file
-        as an array of strings.
-        All the letters in lower cases and capitalized letters.
-        It will also mark the apostrophe as the observable state.
-        All other characters will be put into a hidden state.
-    :param lines:
-        A array of lines read from the file.
-    :return:
-        np matrix.
-    """
-    raise RuntimeError("Deprecated function you should not use it.")
-    characters = ascii_letters + " '"
-    n = len(characters)
-    Characters = characters
-    npmatrix = np.zeros((n, n))
-    for line in lines:
-        line = list(line)
-        if len(line) == 0:
-            continue
-        for i, c2 in enumerate(line[1:]):
-            c1 = line[i]
-            indx1 = Characters.find(c1)
-            indx2 = Characters.find(c2)
-            npmatrix[indx1, indx2] += 1
-
-    for i in range(npmatrix.shape[0]):
-        s = np.sum(npmatrix[i])
-        if s > 0:
-            npmatrix[i] /= s
-    return npmatrix
-
-
 def get_2ndtm(lines: List[str], skipSpecialNoun=False):
     """
         Given the content of the file separated by lines, this function will return the
@@ -142,6 +108,43 @@ def get_2ndtm(lines: List[str], skipSpecialNoun=False):
             j = s(Line[I + 2]) * l + s(Line[I + 3])
             npmatrix[i, j] += 1
 
+    for i in range(npmatrix.shape[0]):
+        s = np.sum(npmatrix[i])
+        if s > 0:
+            npmatrix[i] /= s
+    return npmatrix
+
+
+def get_2ndlogarithm(lines: List[str], skipSpecialNoun=False):
+    """
+        Takes the logarithm after counting the frequency,
+        THis is a transition matrix that will amplifies the
+        occurences of rare sequence compare to traditional sequences.
+    :param lines:
+        All the lines in the file
+    :param skipSpecialNoun:
+        All special nouns are ignore if this is set to true.
+    :return:
+        A numpy matrix
+    """
+    Alphabet = ascii_letters[0:26] + " "
+    l = len(Alphabet)
+    n = l ** 2
+    npmatrix = np.zeros((n, n))
+
+    def s(letter):
+        return Alphabet.find(letter)
+
+    for Line in lines:
+        Line = trim_line(Line, IgnoreCapitalzedWord=skipSpecialNoun)
+        for I in range(len(Line) - 3):
+            i = s(Line[I]) * l + s(Line[I + 1])
+            j = s(Line[I + 2]) * l + s(Line[I + 3])
+            npmatrix[i, j] += 1
+    for i in range(npmatrix.shape[0]):
+        for j in range(npmatrix.shape[1]):
+            if npmatrix[i][j] > 0:
+                npmatrix[i][j] = np.log(npmatrix[i][j])
     for i in range(npmatrix.shape[0]):
         s = np.sum(npmatrix[i])
         if s > 0:
@@ -180,7 +183,7 @@ class AuthorMetric(enum.Enum):
 
     AverageDis = 2 # Taking the average distance of the given transition matrix with respect to
     # All the matrices of the author.
-    # TODO: SOMETHING IS WRONG HERE.
+
 
     CentroidDis = 3 # This metric take the matrix norm on the difference of 2 centroids of the author.
 
@@ -270,6 +273,14 @@ class Author:
 
     def list_of_works_content(self):
         return list(self.__FilePathToLines.values())
+
+    def work_matrix_dict(self):
+        """
+            Give a dictionary that maps the name of the works to the
+            transition matrices.
+        :return:
+        """
+        return dict(zip(self.list_of_works(), self.get_matrices()))
 
     def name(self):
         return self.__AuthorName
@@ -508,7 +519,11 @@ def main():
     print("Ok, we are going to save some centroid for both of the authors now: ")
 
 
+<<<<<<< HEAD
 def generate_intermediate_data():
+=======
+def save_matrices_forall_data():
+>>>>>>> c6effcbeee4fa109b8be82b7d7c878558a2fbd9e
     """
         This function will generate intermediate data from the author's works
         * All different types of transition matrices will be used
@@ -519,6 +534,39 @@ def generate_intermediate_data():
         by themselves using whatever programming languages they are using.
     :return:
     """
+<<<<<<< HEAD
+=======
+    global Author
+    def save(NpMatrix, dir:str, filename:str):
+
+        np.savetxt(fname=filename, X=NpMatrix)
+        return
+
+    def generate_all_authors():
+        AllMatrices = [get_tm27, get_2ndtm, get_2ndlogarithm]
+        FileLocations = [CHARLES_DICKENS, MARK_TWAIN]
+        ListofAuthors = []
+        for L in FileLocations:
+            for G in AllMatrices:
+                ListofAuthors.append(
+                    Author(dir=L,
+                            matrixfunction=G,
+                            IgnoreSpecialNoun=True))
+                ListofAuthors.append(
+                    Author(dir=L,
+                            matrixfunction=G,
+                            IgnoreSpecialNoun=True))
+
+        return ListofAuthors
+
+    # TODO: FINISH THIS SHIT.
+    for Aut in generate_all_authors():
+        AuthorName = Aut.name()
+        for Work, Matrix in zip(Aut.list_of_works(), Aut.get_matrices()):
+            save(Matrix, "")
+        pass
+
+>>>>>>> c6effcbeee4fa109b8be82b7d7c878558a2fbd9e
     pass
 
 
