@@ -22,7 +22,7 @@ __all__ = ["Author", "dis_between_authors", "get_tm27", "get_2ndtm",
 CHARLES_DICKENS = "data/Charles Dickens"
 MARK_TWAIN = "data/Mark Twain"
 ENCODING = "utf8"
-PLOT = "plot"
+PLOT = "generated_data"
 
 np.set_printoptions(threshold=10, precision=2, linewidth=1000)
 
@@ -454,7 +454,6 @@ class Author:
         return s
 
 
-
 def dis_between_authors(author1, author2):
     """
         This function returns 1 number to represent the distance between 2 author's
@@ -509,22 +508,18 @@ def main():
     print("Ok, we are going to save some centroid for both of the authors now: ")
 
 
-
-def save_matrices_forall_data():
+def generate_intermediate_data():
     """
-        This function will save all the works of the authors's transition
-        matrices as a text files, this is for the concerns of correctness of
-        the codes, so that people can just take all the text file and confirm the
-        correctness by themselves.
+        This function will generate intermediate data from the author's works
+        * All different types of transition matrices will be used
+        for authors that are in the data folders.
+        * There will be stored in the generate_data folder, and the naming scheme will
+        be very clear.
+        * The purpose for this is for people verify the results obtained from this project
+        by themselves using whatever programming languages they are using.
     :return:
-        None
     """
-    global Author
-    def save_listof_matrices():
-        pass
-
-
-    pass # TODO: IMPLEMENT THIS SHIT
+    pass
 
 
 if __name__ == '__main__':
